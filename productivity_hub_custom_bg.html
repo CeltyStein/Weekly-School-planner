@@ -1,0 +1,1735 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <!-- Custom background image -->
+    <style>
+body{
+        /* Use a CSS radial-gradient to provide a dark, moody background without requiring a separate image file. */
+        background-image: radial-gradient(circle at center, rgb(46, 2, 73) 0%, rgb(87, 10, 87) 40%, rgb(10, 1, 20) 100%) !important;
+        background-size: cover !important;
+        background-position: center center !important;
+        background-attachment: fixed !important;
+      }
+    </style>
+  <meta charset="utf-8" />
+  <title>Productivity Hub — Planner • Pomodoro • Habits • Assignments</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Style the planner/GUI cards with a dark radial gradient to match the page background. */
+    .card {
+      border-radius: 1rem;
+      /* Add a subtle drop shadow for depth */
+      box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+      /* Use a lighter radial gradient inside the card so it stands out against the dark page background */
+      background-image: radial-gradient(circle at center, rgba(100,60,140,0.6) 0%, rgba(30,15,50,0.85) 100%);
+      background-color: rgba(30,15,50,0.85);
+      color: inherit;
+    }
+    .card:hover {
+      /* Intensify the shadow on hover for a raised effect */
+      box-shadow: 0 4px 14px rgba(0,0,0,0.35);
+    }
+
+    /* Ensure textareas inside cards adopt the same dark, gradient styling for consistency */
+    .card textarea {
+      /* Remove the default white background */
+      background-image: radial-gradient(circle at center, rgba(120,80,160,0.5) 0%, rgba(40,20,70,0.8) 100%);
+      background-color: rgba(40,20,70,0.8);
+      color: inherit;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .btn { border: 1px solid rgb(203 213 225); padding: 0.45rem 0.8rem; border-radius: 0.6rem; font-size: .9rem; }
+    .btn:hover { background: rgb(241 245 249); }
+    .tagline { color: rgb(100 116 139); font-size: .85rem; }
+    .tab-btn[aria-selected="true"] { background: #111827; color: white; }
+    .hide { display: none !important; }
+    .chip { background: #f1f5f9; color: #0f172a; padding: .25rem .6rem; border-radius: 999px; font-size: .8rem; border:1px solid #e2e8f0; }
+    /* Use a dark, galaxy‑inspired backdrop across the entire page */
+    body {
+      /* Blend a radial and linear gradient for depth */
+      background: radial-gradient(1200px 800px at 10% -10%, #2b0a48 0%, #0e0a25 40%), linear-gradient(160deg, #0b0d1b 0%, #0e1224 100%);
+      color: inherit;
+    }
+    .circle { width: 22px; height: 22px; border-radius: 999px; border: 1px solid rgb(203 213 225); display: inline-flex; align-items: center; justify-content: center; }
+    .circle.on { background: rgb(59 130 246); color: white; border-color: rgb(59 130 246); }
+    .day-label { font-size: .7rem; color: #64748b; }
+    .kbd { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; background:#f1f5f9; border:1px solid #e2e8f0; border-bottom-width:2px; padding:.1rem .35rem; border-radius:.45rem; font-size:.75rem }
+
+    /* Calendar component styles */
+    .cal {
+      display: grid;
+      grid-template-columns: 120px repeat(7, 1fr);
+      border: 1px solid rgb(226, 232, 240);
+      border-radius: 0.75rem;
+      overflow: hidden;
+    }
+    .cal-h {
+      background: #f1f5f9;
+      padding: 0.5rem;
+      border-right: 1px solid rgb(226, 232, 240);
+      font-weight: 600;
+    }
+    .cal-col {
+      position: relative;
+      height: 1440px;
+      overflow: hidden;
+      border-right: 1px solid rgb(226, 232, 240);
+    }
+    .cal-hour {
+      height: 60px;
+      border-top: 1px dashed rgb(203, 213, 225);
+    }
+    .event {
+      position: absolute;
+      left: 0.25rem;
+      right: 0.25rem;
+      border: 1px solid rgb(226, 232, 240);
+      border-radius: 0.5rem;
+      padding: 0.4rem;
+      font-size: 0.75rem;
+      overflow: hidden;
+      background: #eef2ff;
+      backdrop-filter: blur(2px);
+    }
+    .allrow {
+      display: grid;
+      grid-template-columns: 120px repeat(7, 1fr);
+      gap: 0.5rem;
+      margin: 0.5rem 0;
+    }
+    .tag {
+      display: inline-block;
+      padding: 0.25rem 0.5rem;
+      border: 1px solid rgb(226, 232, 240);
+      border-radius: 0.5rem;
+      margin: 0.25rem;
+      font-size: 0.75rem;
+      background: #f8fafc;
+    }
+    @media print {
+      body { background: white !important; }
+      header nav, .btn, input[type="file"], .hide-print, iframe { display: none !important; }
+      .card { box-shadow: none !important; border: 1px solid #e2e8f0; }
+      .print-break { break-before: page; page-break-before: always; }
+      .chip { border-color: #cbd5e1; }
+      a { text-decoration: none; color: inherit; }
+      .circle { border-color: #94a3b8; }
+      .circle.on { background: #1f2937 !important; }
+    }
+  </style>
+</head>
+<body class="min-h-screen text-slate-900">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <header class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
+      <div>
+        <h1 class="text-3xl font-bold tracking-tight">Your Productivity Hub</h1>
+        <p class="text-slate-500 text-sm mt-1">Planner + Pomodoro + Habit Tracker + Assignment Checklist</p>
+      </div>
+      <nav class="flex flex-wrap gap-2">
+        <button id="tabPlanner" class="tab-btn btn" aria-controls="panelPlanner" aria-selected="true">📅 Planner</button>
+        <button id="tabPomodoro" class="tab-btn btn" aria-controls="panelPomodoro" aria-selected="false">⏳ Pomodoro</button>
+        <button id="tabHabits" class="tab-btn btn" aria-controls="panelHabits" aria-selected="false">✅ Habits</button>
+        <button id="tabAssignments" class="tab-btn btn" aria-controls="panelAssignments" aria-selected="false">🗂️ Assignments</button>
+        <button id="tabNotes" class="tab-btn btn" aria-controls="panelNotes" aria-selected="false">📝 Notes</button>
+        <button id="tabSettings" class="tab-btn btn" aria-controls="panelSettings" aria-selected="false">⚙️ Settings/Backup</button>
+        <button id="tabCalendar" class="tab-btn btn" aria-controls="panelCalendar" aria-selected="false">📆 Calendar</button>
+        <button onclick="window.print()" class="btn">🖨️ Print</button>
+      </nav>
+    </header>
+
+    <main class="space-y-6">
+      <section id="panelPlanner">
+        <div id="planner-app"></div>
+      </section>
+
+      <section id="panelPomodoro" class="hide">
+        <div class="card p-4">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-xl font-semibold">Pomodoro Timer</h2>
+            <a class="text-sm text-slate-500 hover:underline" href="pomodoro.html" download>Download standalone file</a>
+          </div>
+          <iframe
+            title="Pomodoro"
+            sandbox="allow-scripts allow-same-origin"
+            style="width:100%; height:80vh; border:1px solid rgb(226 232 240); border-radius: 12px; background:white"
+            srcdoc="&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+  &lt;meta charset=&quot;UTF-8&quot; /&gt;
+  &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot; /&gt;
+  &lt;title&gt;My 4-Cycle Pomodoro&lt;/title&gt;
+  &lt;style&gt;
+    :root{
+      --bg:#0f1222;
+      --card:#171a2b;
+      --acc:#7c8cff;
+      --acc-2:#39d98a;
+      --txt:#e8eaf6;
+      --muted:#a8acc7;
+      --danger:#ff6b6b;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, &quot;Apple Color Emoji&quot;,&quot;Segoe UI Emoji&quot;;
+      background: radial-gradient(1200px 800px at 10% -10%, #1d2140 0, var(--bg) 40%), linear-gradient(160deg, #0e1020 0, #0f1222 100%);
+      color:var(--txt);
+      display:flex; align-items:center; justify-content:center; padding:24px;
+    }
+    .app{
+      width:min(920px, 100%);
+      background: color-mix(in oklab, var(--card) 85%, #000 15%);
+      border:1px solid color-mix(in oklab, var(--card) 60%, #fff 10%);
+      border-radius:16px;
+      padding:24px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.03);
+    }
+    header{
+      display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+      margin-bottom:18px;
+    }
+    h1{font-size: clamp(20px, 3.4vw, 28px); margin:0; letter-spacing:.3px}
+    .badge{font-size:12px; color:var(--muted)}
+    .timer-card{
+      display:grid; grid-template-columns: 1fr 380px; gap:18px;
+    }
+    @media (max-width: 850px){
+      .timer-card{grid-template-columns:1fr}
+    }
+    .panel{
+      background:linear-gradient(180deg, rgba(255,255,255,.02), transparent);
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:14px;
+      padding:18px;
+    }
+    .status{
+      display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px;
+      color:var(--muted); font-size:14px;
+    }
+    .status strong{color:var(--txt)}
+    .time{
+      font-variant-numeric: tabular-nums;
+      font-size: clamp(44px, 10vw, 80px);
+      font-weight:700; letter-spacing:1px; text-align:center; margin:10px 0 6px;
+    }
+    .progress{
+      height: 10px; background:#1f2340; border-radius:999px; overflow:hidden; border:1px solid rgba(255,255,255,.06);
+    }
+    .progress &gt; span{
+      display:block; height:100%; width:0%;
+      background: linear-gradient(90deg, var(--acc), var(--acc-2));
+      transition: width .3s ease;
+    }
+    .controls{
+      display:flex; gap:10px; justify-content:center; margin:14px 0 0;
+      flex-wrap:wrap;
+    }
+    button{
+      cursor:pointer; border:0; padding:12px 16px; border-radius:10px; font-weight:600;
+      color:#0b0d18; background:var(--txt);
+    }
+    button.primary{ background: linear-gradient(180deg, var(--acc), color-mix(in oklab,var(--acc) 70%, #000 30%)); color:white; }
+    button.ghost{ background:transparent; color:var(--txt); border:1px solid rgba(255,255,255,.15) }
+    button.danger{ background: var(--danger); color:#fff }
+    .cycle-dots{ display:flex; gap:8px; justify-content:center; margin-top:10px; }
+    .dot{ width:14px; height:14px; border-radius:50%; background:#2b305b; border:1px solid rgba(255,255,255,.14) }
+    .dot.on{ background: conic-gradient(from 180deg, var(--acc), var(--acc-2)); box-shadow:0 0 18px rgba(124,140,255,.35) }
+    .mode-tag{
+      text-align:center; margin-top:8px; font-size:13px; color:var(--muted)
+    }
+    .side{
+      display:grid; gap:12px;
+    }
+    .box h3{ margin:0 0 8px; font-size:16px }
+    .list{ display:grid; gap:8px; }
+    .pill{
+      padding:10px 12px; border-radius:999px; background:#1a1f3f; border:1px solid rgba(255,255,255,.06); color:var(--txt);
+      display:flex; align-items:center; gap:8px; justify-content:space-between; font-size:14px;
+    }
+    .small{ font-size:12px; color:var(--muted) }
+    .right{ text-align:right }
+    .kbd{
+      font-variant: all-small-caps; letter-spacing:.5px; background:#0b0d18; padding:2px 6px; border-radius:6px; border:1px solid rgba(255,255,255,.14);
+      color:var(--muted); font-size:12px;
+    }
+    footer{
+      margin-top:14px; display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; color:var(--muted); font-size:12px;
+    }
+    .task-suggest{
+      display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap;
+      padding:10px 12px; border-radius:12px; border:1px dashed rgba(255,255,255,.18); background: rgba(57,217,138,.07);
+    }
+    .task-suggest strong{ color:#d7ffe8 }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div class=&quot;app&quot;&gt;
+    &lt;header&gt;
+      &lt;h1&gt;⏳ My 4‑Cycle Pomodoro&lt;/h1&gt;
+      &lt;div class=&quot;badge&quot; id=&quot;durations&quot;&gt;30‑min focus • 5‑min short breaks • 30‑min final break&lt;/div&gt;
+      <!-- Focus duration input moved into the timer panel for better visibility on smaller screens -->
+    &lt;/header&gt;
+
+    &lt;div class=&quot;timer-card&quot;&gt;
+      &lt;section class=&quot;panel&quot;&gt;
+        &lt;div class=&quot;status&quot;&gt;&lt;div&gt;Mode: &lt;strong id=&quot;modeLabel&quot;&gt;Focus&lt;/strong&gt;&lt;/div&gt;&lt;div&gt;Cycle &lt;strong id=&quot;cycleNo&quot;&gt;1&lt;/strong&gt; / 4&lt;/div&gt;&lt;/div&gt;
+        &lt;div class=&quot;time&quot; id=&quot;time&quot;&gt;30:00&lt;/div&gt;
+        &lt;div class=&quot;progress&quot;&gt;&lt;span id=&quot;bar&quot;&gt;&lt;/span&gt;&lt;/div&gt;
+        &lt;div class=&quot;controls&quot;&gt;
+          &lt;button class=&quot;primary&quot; id=&quot;startPauseBtn&quot;&gt;Start&lt;/button&gt;
+          &lt;button class=&quot;ghost&quot; id=&quot;skipBtn&quot; title=&quot;Skip to next stage (⏭)&quot;&gt;Skip ⏭&lt;/button&gt;
+          &lt;button class=&quot;danger&quot; id=&quot;resetBtn&quot; title=&quot;Reset all (R)&quot;&gt;Reset&lt;/button&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;cycle-dots&quot; aria-label=&quot;cycle progress&quot;&gt;
+          &lt;span class=&quot;dot on&quot; id=&quot;dot1&quot;&gt;&lt;/span&gt;
+          &lt;span class=&quot;dot&quot; id=&quot;dot2&quot;&gt;&lt;/span&gt;
+          &lt;span class=&quot;dot&quot; id=&quot;dot3&quot;&gt;&lt;/span&gt;
+          &lt;span class=&quot;dot&quot; id=&quot;dot4&quot;&gt;&lt;/span&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;mode-tag&quot; id=&quot;modeHint&quot;&gt;Focus for 30 minutes.&lt;/div&gt;
+        <!-- Relocated focus duration input so it stays visible even when the header scrolls out of view -->
+        &lt;div class=&quot;focus-duration&quot; style=&quot;margin-top:12px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;&quot;&gt;
+          &lt;label for=&quot;focusInput&quot;&gt;Focus duration (mins):&lt;/label&gt;
+          &lt;input id=&quot;focusInput&quot; type=&quot;number&quot; min=&quot;1&quot; max=&quot;60&quot; value=&quot;30&quot; style=&quot;width:60px; padding:4px; border-radius:4px&quot; /&gt;
+        &lt;/div&gt;
+      &lt;/section&gt;
+
+      &lt;aside class=&quot;side&quot;&gt;
+        &lt;section class=&quot;panel box&quot;&gt;
+          &lt;h3&gt;🧠 Break ideas&lt;/h3&gt;
+          &lt;div class=&quot;task-suggest&quot;&gt;
+            &lt;span id=&quot;taskText&quot;&gt;&lt;strong&gt;Jumping jacks&lt;/strong&gt; — get the blood flowing!&lt;/span&gt;
+            &lt;div style=&quot;display:flex; gap:8px; align-items:center&quot;&gt;
+              &lt;button class=&quot;ghost&quot; id=&quot;shuffleBtn&quot; title=&quot;New suggestion (S)&quot;&gt;Shuffle 🔀&lt;/button&gt;
+            &lt;/div&gt;
+          &lt;/div&gt;
+          &lt;div class=&quot;list&quot; style=&quot;margin-top:10px&quot;&gt;
+            &lt;div class=&quot;pill&quot;&gt;🦵 Do a random ab exercise &lt;span class=&quot;small&quot;&gt;planks, bicycle crunches, leg raises…&lt;/span&gt;&lt;/div&gt;
+            &lt;div class=&quot;pill&quot;&gt;🟢 Duolingo lesson &lt;span class=&quot;small&quot;&gt;keep the streak alive&lt;/span&gt;&lt;/div&gt;
+            &lt;div class=&quot;pill&quot;&gt;🈺 Learn Japanese &lt;span class=&quot;small&quot;&gt;kana review, vocab, 1 grammar point&lt;/span&gt;&lt;/div&gt;
+          &lt;/div&gt;
+        &lt;/section&gt;
+
+        &lt;section class=&quot;panel box&quot;&gt;
+          &lt;h3&gt;⚙️ Shortcuts &amp; Tips&lt;/h3&gt;
+          &lt;div class=&quot;list&quot;&gt;
+            &lt;div class=&quot;pill&quot;&gt;⏭ Skip stage &lt;span class=&quot;kbd&quot;&gt;N&lt;/span&gt;&lt;/div&gt;
+            &lt;div class=&quot;pill&quot;&gt;▶/⏸ Start/Pause &lt;span class=&quot;kbd&quot;&gt;Space&lt;/span&gt;&lt;/div&gt;
+            &lt;div class=&quot;pill&quot;&gt;🔁 Reset &lt;span class=&quot;kbd&quot;&gt;R&lt;/span&gt;&lt;/div&gt;
+          &lt;/div&gt;
+          &lt;p class=&quot;small right&quot;&gt;Sound is kept minimal (browser tab alert). Keep this tab active for best accuracy.&lt;/p&gt;
+        &lt;/section&gt;
+      &lt;/aside&gt;
+    &lt;/div&gt;
+
+    &lt;footer&gt;
+      &lt;div&gt;Designed for you • Cycles: 4 • Focus 30:00 • Short break 5:00 • Final break 30:00&lt;/div&gt;
+      &lt;div&gt;Made with ❤️ — works offline&lt;/div&gt;
+    &lt;/footer&gt;
+  &lt;/div&gt;
+
+  &lt;script&gt;
+    // --- Configuration per your request ---
+    let FOCUS_MIN = 30;        // 30-minute focus sessions (now editable)
+    const SHORT_BREAK_MIN = 5;   // 5-minute short breaks after cycles 1–3
+    const LONG_BREAK_MIN = 30;   // 30-minute long break after cycle 4
+    const TOTAL_CYCLES = 4;
+
+    const tasks = [
+      &quot;Jumping jacks — get the blood flowing!&quot;,
+      &quot;Do a random ab exercise — planks, bicycle crunches, leg raises…&quot;,
+      &quot;Do a Duolingo lesson — keep the streak alive&quot;,
+      &quot;Learn Japanese — review kana, vocab, or 1 grammar point&quot;
+    ];
+
+    // --- State ---
+    let cycle = 1;
+    let mode = &quot;focus&quot;; // &#x27;focus&#x27; | &#x27;short&#x27; | &#x27;long&#x27;
+    let secondsLeft = FOCUS_MIN * 60;
+    let running = false;
+    let timerId = null;
+    let startedAt = null;
+
+    // --- Elements ---
+    const timeEl = document.getElementById(&#x27;time&#x27;);
+    const barEl = document.getElementById(&#x27;bar&#x27;);
+    const modeLabel = document.getElementById(&#x27;modeLabel&#x27;);
+    const modeHint = document.getElementById(&#x27;modeHint&#x27;);
+    const cycleNo = document.getElementById(&#x27;cycleNo&#x27;);
+    const startPauseBtn = document.getElementById(&#x27;startPauseBtn&#x27;);
+    const resetBtn = document.getElementById(&#x27;resetBtn&#x27;);
+    const skipBtn = document.getElementById(&#x27;skipBtn&#x27;);
+    const dots = [null, &#x27;dot1&#x27;,&#x27;dot2&#x27;,&#x27;dot3&#x27;,&#x27;dot4&#x27;].map(id =&gt; id ? document.getElementById(id) : null);
+    const taskText = document.getElementById(&#x27;taskText&#x27;);
+    const shuffleBtn = document.getElementById(&#x27;shuffleBtn&#x27;);
+    // Grab focus duration input and handle changes
+    const focusInput = document.getElementById(&#x27;focusInput&#x27;);
+    focusInput.addEventListener(&#x27;input&#x27;, function(){
+      const val = parseInt(this.value, 10);
+      if (!isNaN(val) && val >= 1 && val <= 60) {
+        FOCUS_MIN = val;
+        // When in focus mode, reset the remaining seconds and startedAt
+        if(mode === &#x27;focus&#x27;){
+          secondsLeft = FOCUS_MIN * 60;
+          startedAt = null;
+        }
+        // Update the header durations display
+        document.getElementById(&#x27;durations&#x27;).textContent = `${FOCUS_MIN}-min focus • ${SHORT_BREAK_MIN}-min short breaks • ${LONG_BREAK_MIN}-min final break`;
+        // Update the mode hint when in focus mode
+        if(mode === &#x27;focus&#x27;){
+          modeHint.textContent = `Focus for ${FOCUS_MIN} minutes.`;
+        }
+        // Re-render the time and progress bar
+        updateRender();
+      }
+    });
+
+    function pad(n){ return String(n).padStart(2,&#x27;0&#x27;); }
+    function fmt(sec){
+      const m = Math.floor(sec/60), s = sec%60;
+      return `${pad(m)}:${pad(s)}`;
+    }
+    function totalForMode(m){
+      if(m===&#x27;focus&#x27;) return FOCUS_MIN*60;
+      if(m===&#x27;short&#x27;) return SHORT_BREAK_MIN*60;
+      if(m===&#x27;long&#x27;)  return LONG_BREAK_MIN*60;
+      return 0;
+    }
+    function setMode(newMode){
+      mode = newMode;
+      modeLabel.textContent = (mode===&#x27;focus&#x27; ? &#x27;Focus&#x27; : mode===&#x27;short&#x27; ? &#x27;Short Break&#x27; : &#x27;Long Break&#x27;);
+      const hint = mode===&#x27;focus&#x27;
+        ? `Focus for ${FOCUS_MIN} minutes.`
+        : mode===&#x27;short&#x27;
+          ? `Rest for ${SHORT_BREAK_MIN} minutes.`
+          : `Relax for ${LONG_BREAK_MIN} minutes.`;
+      modeHint.textContent = hint;
+      secondsLeft = totalForMode(mode);
+      startedAt = null;
+      updateRender();
+      // Suggest a break task when entering any break mode
+      if(mode !== &#x27;focus&#x27;){
+        suggestTask(true);
+        // Tiny attention: update document title
+        beep();
+      }
+    }
+    function nextStage(){
+      if(mode===&#x27;focus&#x27;){
+        if(cycle &lt; TOTAL_CYCLES){
+          setMode(&#x27;short&#x27;);
+        }else{
+          setMode(&#x27;long&#x27;);
+        }
+      }else{
+        if(mode===&#x27;short&#x27;){
+          cycle++;
+          setMode(&#x27;focus&#x27;);
+        }else if(mode===&#x27;long&#x27;){
+          // After the long break, reset everything
+          resetAll();
+          return;
+        }
+      }
+      updateCycleUI();
+    }
+    function updateCycleUI(){
+      cycleNo.textContent = cycle;
+      for(let i=1;i&lt;=TOTAL_CYCLES;i++){
+        dots[i].classList.toggle(&#x27;on&#x27;, i&lt;=cycle);
+      }
+    }
+    function updateRender(){
+      const total = totalForMode(mode);
+      const pct = total ? ((total - secondsLeft) / total) * 100 : 0;
+      barEl.style.width = Math.min(100, Math.max(0, pct)) + &#x27;%&#x27;;
+      timeEl.textContent = fmt(secondsLeft);
+      document.title = `${timeEl.textContent} • ${modeLabel.textContent} — Pomodoro`;
+    }
+    function tick(){
+      if(!running) return;
+      if(!startedAt) startedAt = Date.now();
+      const now = Date.now();
+      const elapsed = Math.floor((now - startedAt)/1000);
+      const total = totalForMode(mode);
+      secondsLeft = Math.max(0, total - elapsed);
+      updateRender();
+      if(secondsLeft &lt;= 0){
+        running = false;
+        startPauseBtn.textContent = &#x27;Start&#x27;;
+        nextStage();
+        startedAt = null;
+      }else{
+        timerId = requestAnimationFrame(tick);
+      }
+    }
+    function start(){
+      if(running) return;
+      running = true;
+      startedAt = Date.now() - (totalForMode(mode) - secondsLeft)*1000;
+      startPauseBtn.textContent = &#x27;Pause&#x27;;
+      timerId = requestAnimationFrame(tick);
+    }
+    function pause(){
+      if(!running) return;
+      running = false;
+      startPauseBtn.textContent = &#x27;Start&#x27;;
+      cancelAnimationFrame(timerId);
+      // freeze secondsLeft at its current value
+      const now = Date.now();
+      const elapsed = Math.floor((now - startedAt)/1000);
+      secondsLeft = Math.max(0, totalForMode(mode) - elapsed);
+      startedAt = null;
+      updateRender();
+    }
+    function toggleStart(){
+      running ? pause() : start();
+    }
+    function resetAll(){
+      pause();
+      cycle = 1;
+      updateCycleUI();
+      setMode(&#x27;focus&#x27;);
+      updateRender();
+    }
+    function skip(){
+      pause();
+      nextStage();
+    }
+
+    // Minimal &quot;beep&quot; by toggling title + optional Notification API
+    function beep(){
+      if(document.hidden &amp;&amp; &#x27;Notification&#x27; in window){
+        if(Notification.permission === &#x27;granted&#x27;){
+          new Notification(`Time for ${mode===&#x27;focus&#x27; ? &#x27;Focus&#x27; : &#x27;a Break&#x27;}!`);
+        }else if(Notification.permission !== &#x27;denied&#x27;){
+          Notification.requestPermission();
+        }
+      }
+    }
+
+    // Break task suggestion
+    function suggestTask(force=false){
+      // Only auto-change on first entering break or when force = true
+      const pick = tasks[Math.floor(Math.random()*tasks.length)];
+      taskText.innerHTML = `&lt;strong&gt;${pick.split(&#x27; — &#x27;)[0]}&lt;/strong&gt; — ${pick.split(&#x27; — &#x27;)[1] || &#x27;&#x27;}`;
+    }
+
+    // Events
+    startPauseBtn.addEventListener(&#x27;click&#x27;, toggleStart);
+    resetBtn.addEventListener(&#x27;click&#x27;, resetAll);
+    skipBtn.addEventListener(&#x27;click&#x27;, skip);
+    shuffleBtn.addEventListener(&#x27;click&#x27;, ()=&gt;suggestTask(true));
+    document.addEventListener(&#x27;keydown&#x27;, (e)=&gt;{
+      if(e.code === &#x27;Space&#x27;){ e.preventDefault(); toggleStart(); }
+      if(e.key.toLowerCase() === &#x27;r&#x27;){ resetAll(); }
+      if(e.key.toLowerCase() === &#x27;n&#x27;){ skip(); }
+      if(e.key.toLowerCase() === &#x27;s&#x27;){ suggestTask(true); }
+    });
+
+    // Init
+    updateCycleUI();
+    setMode(&#x27;focus&#x27;); // ensures correct label + time
+    updateRender();
+    suggestTask(true);
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+"
+          ></iframe>
+        </div>
+      </section>
+
+      <section id="panelHabits" class="hide">
+        <div id="habits-app"></div>
+      </section>
+
+      <section id="panelAssignments" class="hide">
+        <div id="assignments-app"></div>
+      </section>
+    
+      <section id="panelNotes" class="hide">
+        <div id="notes-app"></div>
+      </section>
+      <section id="panelSettings" class="hide">
+        <div id="settings-app"></div>
+      </section>
+
+      <!-- Calendar feed panel -->
+      <section id="panelCalendar" class="hide">
+        <!-- The calendar will be rendered here by renderCalendar() -->
+      </section>
+
+    </main>
+  </div>
+
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <script>
+    // Tabs
+    const tabPlanner = document.getElementById('tabPlanner');
+    const tabPomodoro = document.getElementById('tabPomodoro');
+    const tabHabits = document.getElementById('tabHabits');
+    const tabAssignments = document.getElementById('tabAssignments');
+    const tabNotes = document.getElementById('tabNotes');
+    const tabSettings = document.getElementById('tabSettings');
+    const tabCalendar = document.getElementById('tabCalendar');
+    const panelPlanner = document.getElementById('panelPlanner');
+    const panelPomodoro = document.getElementById('panelPomodoro');
+    const panelHabits = document.getElementById('panelHabits');
+    const panelAssignments = document.getElementById('panelAssignments');
+    const panelNotes = document.getElementById('panelNotes');
+    const panelSettings = document.getElementById('panelSettings');
+    const panelCalendar = document.getElementById('panelCalendar');
+
+    function show(which){
+      const map = {
+        planner: [panelPlanner, tabPlanner],
+        pomodoro: [panelPomodoro, tabPomodoro],
+        habits: [panelHabits, tabHabits],
+        assignments: [panelAssignments, tabAssignments],
+        notes: [panelNotes, tabNotes],
+        settings: [panelSettings, tabSettings],
+        calendar: [panelCalendar, tabCalendar],
+      };
+      [panelPlanner, panelPomodoro, panelHabits, panelAssignments, panelNotes, panelSettings, panelCalendar].forEach(p => p.classList.add('hide'));
+      [tabPlanner, tabPomodoro, tabHabits, tabAssignments, tabNotes, tabSettings, tabCalendar].forEach(b => b.setAttribute('aria-selected','false'));
+      const [panel, tab] = map[which];
+      panel.classList.remove('hide'); tab.setAttribute('aria-selected','true');
+      // Always scroll to the top when switching panels so that headers and controls are visible on small screens.
+      window.scrollTo(0,0);
+    }
+    tabPlanner.addEventListener('click', ()=>show('planner'));
+    tabPomodoro.addEventListener('click', ()=>show('pomodoro'));
+    tabHabits.addEventListener('click', ()=>show('habits'));
+    tabAssignments.addEventListener('click', ()=>show('assignments'));
+    tabNotes.addEventListener('click', ()=>show('notes'));
+    tabSettings.addEventListener('click', ()=>show('settings'));
+    tabCalendar.addEventListener('click', ()=>{ show('calendar'); renderCalendar(); });
+
+    // === Calendar helper functions ===
+    const padCal = (n) => String(n).padStart(2,'0');
+    const loadCal = (k, d=null) => {
+      try {
+        const val = localStorage.getItem(k);
+        return val ? JSON.parse(val) : d;
+      } catch (e) {
+        return d;
+      }
+    };
+    const saveCal = (k, v) => {
+      localStorage.setItem(k, JSON.stringify(v));
+    };
+    function h(tag, attrs={}, ...children) {
+      const el = document.createElement(tag);
+      for (const [k,v] of Object.entries(attrs || {})) {
+        if(k === 'class') el.className = v;
+        else if(k === 'style') el.setAttribute('style', v);
+        else if(k.startsWith('on') && typeof v === 'function') {
+          el.addEventListener(k.slice(2).toLowerCase(), v);
+        } else if(v !== null && v !== undefined) {
+          el.setAttribute(k, v);
+        }
+      }
+      for(const c of children.flat()){
+        if(c && typeof c === 'object' && 'nodeType' in c) el.appendChild(c);
+        else el.appendChild(document.createTextNode(String(c)));
+      }
+      return el;
+    }
+    function parseICSCal(text){
+      function unfold(t){ return t.replace(/\r\n[ \t]/g,'').replace(/\n[ \t]/g,''); }
+      function parseDate(v){ const s=String(v).trim(); const y=parseInt(s.slice(0,4),10), m=parseInt(s.slice(4,6),10)-1, d=parseInt(s.slice(6,8),10); if(s.length<=8){ return {date:new Date(y,m,d,0,0,0), allDay:true}; } else { const hh=parseInt(s.slice(9,11)||'0',10); const mm=parseInt(s.slice(11,13)||'0',10); const ss=parseInt(s.slice(13,15)||'0',10); return {date:new Date(y,m,d,hh,mm,ss), allDay:false}; } }
+      const t = unfold(text); const blocks = t.split(/BEGIN:VEVENT/).slice(1).map(b=>'BEGIN:VEVENT'+b.split(/END:VEVENT/)[0]+'END:VEVENT'); const evs=[];
+      for(const b of blocks){ const lines = b.split(/\r?\n/); let dtstart=null, dtend=null, allDay=false, summary='', description=''; for(let ln of lines){ if(!ln) continue; if(ln.startsWith('DTSTART')){ const val=ln.split(':').slice(1).join(':').trim(); const p=parseDate(val); dtstart=p.date; if(p.allDay) allDay=true; } else if(ln.startsWith('DTEND')){ const val=ln.split(':').slice(1).join(':').trim(); const p=parseDate(val); dtend=p.date; } else if(ln.startsWith('SUMMARY')){ summary=ln.split(':').slice(1).join(':').trim().replace(/[<>]/g,''); } else if(ln.startsWith('DESCRIPTION')){ description=ln.split(':').slice(1).join(':').trim().replace(/[<>]/g,''); } } if(dtstart){ evs.push({start:dtstart.toISOString(), end:(dtend||dtstart).toISOString(), allDay, title:summary||'(No title)', description:description||''}); } }
+      return evs;
+    }
+    function renderCalendar(){
+      const container = document.getElementById('panelCalendar');
+      if(!container) return;
+      container.innerHTML='';
+      const prevBtn = h('button',{class:'btn',onclick:()=>{ week.setDate(week.getDate()-7); draw(); }}, '← Prev');
+      const nextBtn = h('button',{class:'btn',onclick:()=>{ week.setDate(week.getDate()+7); draw(); }}, 'Next →');
+      const pick = h('input',{type:'date',id:'pickCal'});
+      const showAllCheckbox = h('input',{type:'checkbox',id:'showAllCal',checked:true});
+      const compactCheckbox = h('input',{type:'checkbox',id:'compactCal'});
+      const labelShow = h('label',{},' Show all‑day ', showAllCheckbox);
+      const labelCompact = h('label',{},' Compact ', compactCheckbox);
+      const importInput = h('input',{type:'file',accept:'.ics,text/calendar',style:'display:none',onchange:e=>{ const f=e.target.files && e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=()=>{ const arr=parseICSCal(String(r.result)); const cur=loadCal('calendar-feed-events', []); saveCal('calendar-feed-events', cur.concat(arr)); alert('Imported '+arr.length+' events.'); draw(); e.target.value=null; }; r.readAsText(f); }});
+      const importLabel = h('label',{class:'btn'},'⬆️ Import .ics to Feed', importInput);
+      const leftControls = h('div',{}, prevBtn, nextBtn, pick, labelShow, labelCompact);
+      const rightControls = h('div',{}, importLabel);
+      const row = h('div',{class:'flex flex-wrap items-center gap-2 justify-between mb-4'}, leftControls, rightControls);
+      const rangeDiv = h('div',{class:'chip mb-2'});
+      const allRow = h('div',{class:'allrow'});
+      const grid = h('div',{class:'cal'});
+      container.append(row, rangeDiv, allRow, grid);
+      const days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+      function startOfWeek(d){ const dt=new Date(d); dt.setDate(dt.getDate()-dt.getDay()); dt.setHours(0,0,0,0); return dt; }
+      let week = startOfWeek(new Date());
+      function draw(){
+        const evs = loadCal('calendar-feed-events', []);
+        pick.value = `${week.getFullYear()}-${padCal(week.getMonth()+1)}-${padCal(week.getDate())}`;
+        const endDate = new Date(week); endDate.setDate(week.getDate()+6);
+        rangeDiv.textContent = week.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' – '+endDate.toLocaleDateString(undefined,{month:'short',day:'numeric'});
+        const showAll = document.getElementById('showAllCal').checked;
+        const compact = document.getElementById('compactCal').checked;
+        allRow.innerHTML=''; grid.innerHTML='';
+        if(showAll && !compact){
+          allRow.append(h('div',{},'All‑day'));
+          for(let i=0;i<7;i++){
+            const day=new Date(week); day.setDate(week.getDate()+i);
+            const cell=h('div',{class:'card'});
+            const items=evs.filter(ev=>{
+              const start=new Date(ev.start);
+              const endDt=new Date(ev.end);
+              return ev.allDay && start <= new Date(day.getFullYear(),day.getMonth(),day.getDate(),23,59,59,999) && endDt >= new Date(day.getFullYear(),day.getMonth(),day.getDate(),0,0,0,0);
+            });
+            items.forEach(ev=>cell.append(h('span',{class:'tag'},ev.title)));
+            allRow.append(cell);
+          }
+        }
+        grid.append(h('div',{class:'cal-h'},'Time'));
+        for(let i=0;i<7;i++){
+          const d=new Date(week); d.setDate(week.getDate()+i);
+          grid.append(h('div',{class:'cal-h'}, `${days[d.getDay()]} ${d.getMonth()+1}/${d.getDate()}`));
+        }
+        for(let i=0;i<7;i++){
+          const col=h('div',{class:'cal-col'});
+          for(let hh=0;hh<=24;hh++){
+            col.append(h('div',{class:'cal-hour'}));
+          }
+          const day=new Date(week); day.setDate(week.getDate()+i);
+          const items=evs.filter(ev=>{
+            if(ev.allDay) return false;
+            const start=new Date(ev.start);
+            const endDt=new Date(ev.end);
+            const dayStart=new Date(day.getFullYear(),day.getMonth(),day.getDate(),0,0,0,0);
+            const dayEnd=new Date(day.getFullYear(),day.getMonth(),day.getDate(),23,59,59,999);
+            return start <= dayEnd && endDt >= dayStart;
+          });
+          items.forEach(ev=>{
+            const s=new Date(ev.start);
+            const e=new Date(ev.end);
+            const top=s.getHours()*60 + s.getMinutes();
+            const bottom=e.getHours()*60 + e.getMinutes();
+            const height=Math.max(20, bottom - top);
+            const eventEl=h('div',{class:'event',title:(ev.title||'')+'\n'+(ev.description||'')});
+            eventEl.style.top = top + 'px';
+            eventEl.style.height = height + 'px';
+            eventEl.textContent = ev.title;
+            col.append(eventEl);
+          });
+          grid.append(col);
+        }
+      }
+      pick.addEventListener('change', e=>{ const d=new Date(e.target.value); d.setHours(0,0,0,0); week=d; draw(); });
+      draw();
+    }
+
+    // Apple Calendar opener
+    function openInAppleCalendar(icsString) {
+      try {
+        const blob = new Blob([icsString], { type: "text/calendar;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const ua = navigator.userAgent || "";
+        const isSafari = /Safari/.test(ua) && !/Chrome|Chromium|Edg/.test(ua);
+        const isApple = /iPhone|iPad|iPod|Macintosh|Mac OS X/.test(ua);
+
+        // Safari on iOS/macOS will generally hand off .ics to Calendar if we navigate to it
+        if (isSafari && isApple) {
+          window.location.href = url;
+        } else {
+          // Fallback: open in a new tab; Apple devices usually still prompt Calendar
+          const a = document.createElement("a");
+          a.href = url;
+          a.target = "_blank";
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+        }
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
+      } catch (e) {
+        alert("Couldn't open Calendar. You can still Export .ics and open it from Files.");
+      }
+    }
+  </script>
+
+  
+  <script>
+    // === Early auto-restore on startup ===
+    (function(){
+      const DB_NAME = "planner-backup"; const STORE = "kv";
+      function idbOpen(){
+        return new Promise((res, rej)=>{
+          const r = indexedDB.open(DB_NAME,1);
+          r.onupgradeneeded = ()=>{ const db = r.result; if(!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE); };
+          r.onsuccess = ()=>res(r.result); r.onerror = ()=>rej(r.error);
+        });
+      }
+      function idbGet(key){
+        return idbOpen().then(db => new Promise((res, rej)=>{
+          const tx = db.transaction(STORE, "readonly"); const req = tx.objectStore(STORE).get(key);
+          req.onsuccess = ()=>res(req.result); req.onerror = ()=>rej(req.error);
+        }));
+      }
+      function applyAllData(bundle){
+        try {
+          if (bundle?.planner?.schedule) localStorage.setItem("planner-schedule", JSON.stringify(bundle.planner.schedule));
+          if (typeof bundle?.planner?.notes === "string") localStorage.setItem("planner-notes", bundle.planner.notes);
+          if (bundle?.habits) localStorage.setItem("habits-data", JSON.stringify(bundle.habits));
+          if (bundle?.assignments) localStorage.setItem("assignments-data", JSON.stringify(bundle.assignments));
+          if (bundle?.notes) localStorage.setItem("notes-data", JSON.stringify(bundle.notes));
+          return true;
+        } catch(e){ console.warn("Auto-restore failed:", e); return false; }
+      }
+      (async ()=>{
+        try{
+          const auto = await idbGet("auto-restore");
+          if(!auto) return;
+          const handle = await idbGet("backup-handle");
+          if(!handle || !handle.getFile) return;
+          const file = await handle.getFile();
+          const text = await file.text();
+          const data = JSON.parse(text);
+          applyAllData(data);
+          console.log("[Auto-restore] Loaded data from backup file.");
+        }catch(e){
+          console.log("[Auto-restore] Skipped or failed:", e?.message || e);
+        }
+      })();
+    })();
+  </script>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+    const dayOrder = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+
+    // Categories
+    const CATS = [
+      { id: "study", label: "🟦 Study/Work", emoji: "🟦", chip: "bg-blue-100 text-blue-900 border-blue-200", border: "border-l-blue-500" },
+      { id: "exercise", label: "🟩 Exercise", emoji: "🟩", chip: "bg-green-100 text-green-900 border-green-200", border: "border-l-green-500" },
+      { id: "meals", label: "🔴 Meals", emoji: "🔴", chip: "bg-red-100 text-red-900 border-red-200", border: "border-l-red-500" },
+      { id: "admin", label: "🟨 Morning/Admin", emoji: "🟨", chip: "bg-amber-100 text-amber-900 border-amber-200", border: "border-l-amber-500" },
+      { id: "free", label: "🟪 Free/Breaks", emoji: "🟪", chip: "bg-purple-100 text-purple-900 border-purple-200", border: "border-l-purple-500" },
+      { id: "night", label: "🌙 Night", emoji: "🌙", chip: "bg-violet-100 text-violet-900 border-violet-200", border: "border-l-violet-500" },
+      { id: "none", label: "— None", emoji: "", chip: "bg-slate-100 text-slate-800 border-slate-200", border: "border-l-slate-300" },
+    ];
+    const catById = id => CATS.find(c => c.id===id) || CATS[CATS.length-1];
+
+    // Planner helpers
+    const tagStyle = (text) => {
+      if (text.includes("🟦")) return "border-l-blue-500";
+      if (text.includes("🟩")) return "border-l-green-500";
+      if (text.includes("🔴")) return "border-l-red-500";
+      if (text.includes("🟨")) return "border-l-amber-500";
+      if (text.includes("🟪")) return "border-l-purple-500";
+      if (text.includes("🌙")) return "border-l-violet-500";
+      return "border-l-slate-300";
+    };
+    const pad2 = (n) => String(n).padStart(2, "0");
+    const to24 = (h, m, period) => {
+      let hour = parseInt(h, 10);
+      let minute = parseInt(m || "0", 10);
+      const up = period.toUpperCase();
+      if (up === "AM") { if (hour === 12) hour = 0; } else { if (hour !== 12) hour += 12; }
+      return { hour, minute };
+    };
+    const yyyymmdd = (d) => d.getFullYear()+pad2(d.getMonth()+1)+pad2(d.getDate());
+    const hhmmss = (h, m) => pad2(h)+pad2(m)+"00";
+    function parseTimeFromLine(line) {
+      const [timePartRaw, ...rest] = line.split(":");
+      if (!rest.length) return null;
+      const summary = rest.join(":").trim();
+      const timePart = timePartRaw.trim();
+      let m = timePart.match(/^(\\d{1,2})(?::(\\d{2}))?\\s*[–-]\\s*(\\d{1,2})(?::(\\d{2}))?\\s*(AM|PM)$/i);
+      if (m) {
+        const [, h1, m1, h2, m2, period] = m;
+        let start = to24(h1, m1 || "0", period);
+        let end = to24(h2, m2 || "0", period);
+        if (period.toUpperCase() === "PM" && (end.hour < start.hour)) { start = to24(h1, m1 || "0", "AM"); }
+        return { summary: summary || "(No title)", startHour: start.hour, startMin: start.minute, endHour: end.hour, endMin: end.minute };
+      }
+      m = timePart.match(/^(\\d{1,2})(?::(\\d{2}))?\\s*(AM|PM)$/i);
+      if (m) {
+        const [, hh, mm, period] = m;
+        const start = to24(hh, mm || "0", period);
+        const endMinuteTotal = start.minute + 60;
+        const endHour = start.hour + Math.floor(endMinuteTotal / 60);
+        const endMin = endMinuteTotal % 60;
+        return { summary: summary || "(No title)", startHour: start.hour, startMin: start.minute, endHour, endMin };
+      }
+      return null;
+    }
+    const isAllDay = (line) => /(^|\\b)(Relax|Rest)(\\b|$)/i.test(line);
+    const summaryFromLine = (line) => {
+      const parts = line.split(":");
+      return parts.length > 1 ? parts.slice(1).join(":").trim() : line.trim();
+    };
+
+    function buildPlannerICS(schedule, weekStartDate, alarmMinutes = 30, includeAssignments = false, includeDoneAssignments = false) {
+      const lines = ["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//WeeklyPlanner//EN","CALSCALE:GREGORIAN"];
+      const start = new Date(weekStartDate);
+      const dayIdx = (start.getDay() + 6) % 7;
+      const monday = new Date(start); monday.setDate(start.getDate() - dayIdx);
+      let uidCounter = 1;
+      const pushAlarm = () => {
+        lines.push("BEGIN:VALARM");
+        lines.push(`TRIGGER:-PT${Math.max(0, parseInt(alarmMinutes||0,10))}M`);
+        lines.push("ACTION:DISPLAY");
+        lines.push("DESCRIPTION:Reminder");
+        lines.push("END:VALARM");
+      };
+      for (let i=0;i<dayOrder.length;i++) {
+        const date = new Date(monday); date.setDate(monday.getDate() + i);
+        const ymd = yyyymmdd(date);
+        const items = schedule[dayOrder[i]] || [];
+        items.forEach(line => {
+          const allday = isAllDay(line);
+          const sum = summaryFromLine(line) || "(No title)";
+          const safeSummary = sum.replace(/\\n/g, " ").replace(/,/g, "\\,");
+          lines.push("BEGIN:VEVENT");
+          lines.push(`UID:${Date.now()}-${uidCounter++}@weeklyplanner`);
+          lines.push(`DTSTAMP:${ymd}T000000`);
+          lines.push(`SUMMARY:${safeSummary}`);
+          if (allday) {
+            const next = new Date(date); next.setDate(date.getDate() + 1);
+            const ymdNext = yyyymmdd(next);
+            lines.push("DTSTART;VALUE=DATE:" + ymd);
+            lines.push("DTEND;VALUE=DATE:" + ymdNext);
+          } else {
+            const parsed = parseTimeFromLine(line);
+            if (!parsed) { lines.push("END:VEVENT"); return; }
+            const { startHour, startMin, endHour, endMin } = parsed;
+            const dtStart = `${ymd}T${hhmmss(startHour, startMin)}`;
+            const dtEnd   = `${ymd}T${hhmmss(endHour, endMin)}`;
+            lines.push(`DTSTART:${dtStart}`);
+            lines.push(`DTEND:${dtEnd}`);
+          }
+          pushAlarm();
+          lines.push("END:VEVENT");
+        });
+      }
+      if (includeAssignments) {
+        const raw = localStorage.getItem("assignments-data");
+        if (raw) {
+          try {
+            const { items } = JSON.parse(raw);
+            (items || []).forEach((a) => {
+              if (!includeDoneAssignments && a.done) return;
+              if (!a.dueDate) return;
+              const ymd = a.dueDate.replaceAll("-","");
+              const title = `${(a.cat && a.cat!=='none') ? (catById(a.cat).emoji + " ") : ""}${a.title || "Assignment"}`.replace(/,/g,"\\,");
+              lines.push("BEGIN:VEVENT");
+              lines.push(`UID:${Date.now()}-${uidCounter++}@assignments`);
+              lines.push(`DTSTAMP:${ymd}T000000`);
+              lines.push(`SUMMARY:${title}${a.course?(" ("+a.course.replace(/,/g,"\\,")+")"):""}`);
+              lines.push(`CATEGORIES:${(a.cat?catById(a.cat).label:"").replace(/,/g,"\\,")}`);
+              if (a.time) {
+                const tm = a.time.padStart(5,"0");
+                const [H,M] = tm.split(":");
+                const start = `${ymd}T${H}${M}00`;
+                const endH = String(Math.min(23, parseInt(H,10)+1)).padStart(2,"0");
+                const end = `${ymd}T${endH}${M}00`;
+                lines.push("DTSTART:"+start);
+                lines.push("DTEND:"+end);
+              } else {
+                const dt = new Date(a.dueDate);
+                const next = new Date(dt); next.setDate(dt.getDate()+1);
+                const ymd2 = next.getFullYear()+String(next.getMonth()+1).padStart(2,"0")+String(next.getDate()).padStart(2,"0");
+                lines.push("DTSTART;VALUE=DATE:"+ymd);
+                lines.push("DTEND;VALUE=DATE:"+ymd2);
+              }
+              if (a.notes) lines.push("DESCRIPTION:" + a.notes.replace(/\\n/g," ").replace(/,/g,"\\,"));
+              pushAlarm();
+              lines.push("END:VEVENT");
+            });
+          } catch {}
+        }
+      }
+      lines.push("END:VCALENDAR");
+      return lines.join("\\r\\n");
+    }
+
+    /* Planner UI */
+    function DayCard({ day, items, editable, onChange }) {
+      const [lines, setLines] = useState(items);
+      useEffect(() => setLines(items), [items]);
+      const addLine = () => { const next = [...lines, "• Add a new item…"]; setLines(next); onChange(next); };
+      const updateLine = (i, val) => { const next = [...lines]; next[i] = val; setLines(next); onChange(next); };
+      const removeLine = (i) => { const next = lines.filter((_, idx) => idx !== i); setLines(next); onChange(next); };
+      return (
+        <div className="card p-0 transition">
+          <div className="px-5 pt-4 pb-2">
+            <div className="text-xl font-semibold tracking-tight inline-flex items-center gap-2">
+              <span className="bg-slate-100 text-slate-800 px-3 py-1 rounded-xl text-base">{day}</span>
+            </div>
+          </div>
+          <div className="px-5 pb-4 space-y-2">
+            {lines.map((line, idx) => (
+              <div key={idx} className={`flex items-start gap-2 border-l-4 pl-3 py-1 ${tagStyle(line)}`}>
+                {editable ? (
+                  <textarea value={line} onChange={(e) => updateLine(idx, e.target.value)}
+                    className="w-full bg-white rounded-lg p-2 text-sm focus:outline-none focus:ring-2 ring-offset-2 ring-blue-400" rows={2} />
+                ) : (
+                  <div className="text-sm leading-5 whitespace-pre-wrap">{line}</div>
+                )}
+                {editable && (
+                  <button className="shrink-0 text-slate-500 hover:text-red-600 px-2" title="Remove item" onClick={() => removeLine(idx)}>✕</button>
+                )}
+              </div>
+            ))}
+            {editable && (
+              <button onClick={addLine} className="mt-1 btn">➕ Add item</button>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    function PlannerApp() {
+      const initialSchedule = {
+        Monday: [
+          "1–4 AM: 🟦 Discussion Posts (Pomodoro)\\n  • 1:00–1:25 Focus → 1:25–1:30 🟩 Jumping Jacks\\n  • 1:30–1:55 Focus → 1:55–2:00 🟩 JJs\\n  • 2:00–2:25 Focus → 2:25–2:30 🟩 JJs\\n  • 2:30–2:55 Focus → 2:55–3:25 🟪 BIG BREAK 🌳 Walk/Stretch",
+          "5–6 AM: 🟦 Easier Essays",
+          "6 AM: 🟨 Wake, shower, breakfast",
+          "7–9 AM: 🟦 Finish Essays (Pomodoro cycles)",
+          "9–12 PM: 🟦 Polish Essays (Pomodoro cycles)",
+          "12 PM: 🔴 Lunch + Coursera",
+          "1–5 PM: 🟦 Quizzes/Labs/Assignments (Pomodoro cycles w/ breaks)",
+          "5–6 PM: 🔴 Dinner",
+          "6–7 PM: 🟦 Labs/Simulations",
+          "7–8:30 PM: 🟦 Labs/Simulations",
+          "8:30–9 PM: 🟨 Emails (7:30–8) → 🌙 Night Routine",
+          "9–11 PM: 🌙 Sleep",
+        ],
+        Tuesday: [
+          "6 AM: 🟨 Wake, shower, breakfast",
+          "7–9 AM: 🟦 Polish Essays (Pomodoro)",
+          "9–12 PM: 🟦 Check assignments → finish",
+          "12 PM: 🔴 Lunch",
+          "1–5 PM: 🟦 Study Notes (Pomodoro cycles)",
+          "5–6 PM: 🔴 Dinner",
+          "6–7 PM: 🟩 Martial Arts",
+          "7–8:30 PM: 🟩 Gym (weights/conditioning, Pomodoro optional)",
+          "8:30–9 PM: 🌙 Shower + Night Routine → Sleep",
+          "9–11 PM: 🌙 Sleep",
+        ],
+        Wednesday: [
+          "6 AM: 🟧 Technique workout + calligraphy",
+          "7–9 AM: 🟪 Relax",
+          "9–12 PM: 🟦 Work",
+          "12 PM: 🔴 Lunch (Spanish/Japanese)",
+          "1–5 PM: 🟦 Work",
+          "5–6 PM: 🔴 Dinner + rehab stretch",
+          "6–7 PM: 🟩 Martial Arts",
+          "7–8:30 PM: 🟩 Gym (weights/conditioning)",
+          "8:30–9 PM: 🌙 Night Routine",
+          "9–11 PM: 🌙 Sleep",
+        ],
+        Thursday: [
+          "6 AM: 🟨 Wake, shower, breakfast",
+          "7–9 AM: 🟧 Chill Skills",
+          "9–12 PM: 🟧 Chill Skills",
+          "12 PM: 🔴 Lunch",
+          "1–5 PM: 🟪 Relax (Manga, Anime)",
+          "5–6 PM: 🔴 Dinner",
+          "6–7 PM: 🟪 Free",
+          "7–8:30 PM: 🟨 Emails (7:30–8)",
+          "8:30–9 PM: 🌙 Night Routine",
+          "9–11 PM: 🌙 Sleep",
+        ],
+        Friday: [
+          "6 AM: 🟨 Wake, shower, breakfast",
+          "7–9 AM: 🟦 Reply to Posts (Pomodoro)",
+          "9–12 PM: 🟦 PC Support Labs & Quizzes (Pomodoro)",
+          "12 PM: 🔴 Lunch",
+          "1–5 PM: 🟦 Textbook Study (Pomodoro cycles)",
+          "5–6 PM: 🔴 Dinner",
+          "6–7 PM: 🟩 Gym (weights)",
+          "7–8:30 PM: 🟩 Jiu-Jitsu",
+          "8:30–9 PM: 🌙 Night Routine",
+          "9–11 PM: 🌙 Sleep",
+        ],
+        Saturday: [
+          "6 AM: 🟨 Wake, shower, breakfast",
+          "7–9 AM: 🟧 Me Time Skills",
+          "9–12 PM: 🟦 Textbook Studies (Pomodoro)",
+          "12 PM: 🔴 Lunch",
+          "1–5 PM: 🟦 Textbook Studies (Pomodoro cycles)",
+          "5–6 PM: 🔴 Dinner",
+          "6–7 PM: 🟦 Textbook Studies",
+          "7–8:30 PM: 🟦 Textbook Studies",
+          "8:30–9 PM: 🌙 Night Routine",
+          "9–11 PM: 🌙 Sleep",
+        ],
+        Sunday: [
+          "6 AM: 🟨 Wake, shower, breakfast",
+          "7–9 AM: 🟦 PC Textbook Studies (Pomodoro)",
+          "9–12 PM: 🟦 PC Textbook Studies (Pomodoro)",
+          "12 PM: 🔴 Lunch",
+          "1–5 PM: 🟦 PC Studies 1–2 → 🟪 Rest",
+          "5–6 PM: 🔴 Dinner",
+          "8:30–9 PM: 🌙 Night Routine",
+          "9–11 PM: 🌙 Sleep",
+        ],
+      };
+
+      const [schedule, setSchedule] = useState(initialSchedule);
+      const [editable, setEditable] = useState(false);
+      const [notes, setNotes] = useState("");
+      const [weekStart, setWeekStart] = useState("");
+      const [alarmMin, setAlarmMin] = useState(30);
+      const [includeAssign, setIncludeAssign] = useState(true);
+      const [includeDoneAssign, setIncludeDoneAssign] = useState(false);
+
+      useEffect(() => {
+        const saved = localStorage.getItem("planner-schedule");
+        if (saved) { try { setSchedule(JSON.parse(saved)); } catch {} }
+        const savedNotes = localStorage.getItem("planner-notes");
+        if (savedNotes !== null) setNotes(savedNotes);
+      }, []);
+
+      const saveToBrowser = () => {
+        localStorage.setItem("planner-schedule", JSON.stringify(schedule));
+        alert("Saved schedule to your browser.");
+      };
+      const updateDay = (day, lines) => setSchedule((s) => ({ ...s, [day]: lines }));
+
+      const exportJson = () => {
+        const payload = { schedule, notes };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url; a.download = "weekly_planner_with_notes.json"; a.click();
+        URL.revokeObjectURL(url);
+      };
+      const importJson = (file) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          try {
+            const data = JSON.parse(reader.result);
+            if (data.schedule) setSchedule(data.schedule);
+            if (typeof data.notes === "string") setNotes(data.notes);
+          } catch (e) { alert("Invalid JSON file."); }
+        };
+        reader.readAsText(file);
+      };
+
+      const exportICS = () => {
+        if (!weekStart) { alert("Pick the week start date first."); return; }
+        const ics = buildPlannerICS(schedule, weekStart, alarmMin, includeAssign, includeDoneAssign);
+        const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url; a.download = "weekly_schedule_combined.ics"; a.click();
+        URL.revokeObjectURL(url);
+      };
+      const addToApple = () => {
+        if (!weekStart) { alert("Pick the week start date first."); return; }
+        const ics = buildPlannerICS(schedule, weekStart, alarmMin, includeAssign, includeDoneAssign);
+        window.openInAppleCalendar(ics);
+      };
+
+      return (
+        <div className="space-y-6">
+          <header className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-2xl font-bold tracking-tight">Weekly Planner</h2>
+              <p className="tagline mt-1">Emoji key: 🟦 study/work • 🟩 exercise • 🔴 meals • 🟨 morning/admin • 🟪 free/breaks • 🌙 night</p>
+            </div>
+            <div className="flex flex-wrap items-center gap-3">
+              <label className="inline-flex items-center gap-2 text-sm">
+                <input type="checkbox" checked={editable} onChange={(e) => setEditable(e.target.checked)} />
+                Edit mode
+              </label>
+              <button onClick={saveToBrowser} className="btn">Save to Browser</button>
+              <button onClick={exportJson} className="btn">Export JSON</button>
+              <label className="btn cursor-pointer">
+                Import JSON
+                <input type="file" accept="application/json" className="hidden" onChange={(e) => e.target.files[0] && importJson(e.target.files[0])} />
+              </label>
+            </div>
+          </header>
+
+          <section className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {Object.entries(schedule).map(([day, lines]) => (
+              <DayCard key={day} day={day} items={lines} editable={editable} onChange={(n) => updateDay(day, n)} />
+            ))}
+          </section>
+
+          <section className="grid md:grid-cols-2 gap-4">
+            <div className="card p-4">
+              <div className="text-base font-semibold mb-2">Weekly Notes</div>
+              <textarea className="w-full border border-slate-300 rounded-lg p-3 text-sm min-h-[140px] focus:outline-none focus:ring-2 ring-blue-400"
+                placeholder="Write notes, reminders, or todos for this week…"
+                value={notes} onChange={(e) => setNotes(e.target.value)} />
+              <div className="mt-2 flex items-center gap-2">
+                <button className="btn" onClick={() => { localStorage.setItem('planner-notes', notes); alert('Notes saved to your browser.'); }}>💾 Save Notes</button>
+                <span className="tagline">Notes are saved in your browser only.</span>
+              </div>
+            </div>
+
+            <div className="card p-4 space-y-3">
+              <div className="text-base font-semibold">Calendar Export (.ics)</div>
+              <p className="tagline">Default reminder in minutes. “Relax/Rest” are all-day. You can include assignments.</p>
+              <div className="flex flex-wrap items-center gap-3">
+                <label className="text-sm">Week starts on:</label>
+                <input type="date" className="border border-slate-300 rounded-md px-3 py-1.5 text-sm" onChange={(e) => setWeekStart(e.target.value)} />
+                <label className="text-sm inline-flex items-center gap-2">
+                  Reminder (min): <input type="number" className="w-20 border border-slate-300 rounded-md px-2 py-1 text-sm" value={alarmMin} onChange={(e)=>setAlarmMin(e.target.value)} />
+                </label>
+                <label className="text-sm inline-flex items-center gap-2">
+                  <input type="checkbox" checked={includeAssign} onChange={(e)=>setIncludeAssign(e.target.checked)} /> Include assignments
+                </label>
+                <label className="text-sm inline-flex items-center gap-2">
+                  <input type="checkbox" checked={includeDoneAssign} onChange={(e)=>setIncludeDoneAssign(e.target.checked)} /> Include done
+                </label>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <button onClick={exportICS} className="btn">⬇️ Export combined .ics</button>
+                <button onClick={addToApple} className="btn">🍎 Add to Apple Calendar</button>
+              </div>
+              <div className="text-xs text-slate-500">If nothing opens on iPhone/Mac, use Export first, then open the .ics from Files/Downloads.</div>
+            </div>
+          </section>
+        </div>
+      );
+    }
+
+    // Habits
+    const defaultHabits = [
+      { name: "Spanish/French", cat: "study" },
+      { name: "Stretch", cat: "exercise" },
+      { name: "Guitar/Violin", cat: "study" },
+      { name: "Calligraphy/Shorthand", cat: "study" },
+      { name: "Japanese", cat: "study" },
+      { name: "Technique", cat: "study" },
+      { name: "Sewing", cat: "study" },
+      { name: "Coding", cat: "study" },
+      { name: "Night routine", cat: "night" },
+    ];
+
+    function HabitRow({ name, state, cat, onToggle, onRename, onRemove, onCat }) {
+      const c = catById(cat);
+      return (
+        <div className="flex items-center justify-between gap-3 p-3 rounded-xl border border-slate-200">
+          <div className="flex items-center gap-2 flex-1">
+            <span className={`chip ${c.chip}`}>{c.emoji || "•"}</span>
+            <input className="flex-1 px-3 py-1.5 border border-slate-300 rounded-md text-sm" value={name}
+                   onChange={(e)=>onRename(e.target.value)} />
+            <select className="border border-slate-300 rounded-md text-sm px-2 py-1" value={cat} onChange={(e)=>onCat(e.target.value)}>
+              {CATS.map(cc => <option key={cc.id} value={cc.id}>{cc.label}</option>)}
+            </select>
+          </div>
+          <div className="flex items-center gap-2">
+            {dayOrder.map((d, i) => (
+              <div key={d} className="text-center">
+                <button className={`circle ${state[i] ? 'on' : ''}`} onClick={()=>onToggle(i)} title={d}>{state[i] ? '✓' : ''}</button>
+                <div className="day-label">{d[0]}</div>
+              </div>
+            ))}
+          </div>
+          <button className="btn" onClick={onRemove} title="Remove habit">🗑</button>
+        </div>
+      );
+    }
+
+    function HabitsApp() {
+      const [habits, setHabits] = useState([]);
+      useEffect(() => {
+        const saved = localStorage.getItem("habits-data");
+        if (saved) {
+          try { setHabits(JSON.parse(saved)); return; } catch {}
+        }
+        setHabits(defaultHabits.map(h => ({ name: h.name, cat: h.cat, days: [false,false,false,false,false,false,false] })));
+      }, []);
+
+      const save = () => { localStorage.setItem("habits-data", JSON.stringify(habits)); alert("Habits saved to your browser."); };
+      const addHabit = () => setHabits(prev => [...prev, { name: "New habit", cat: "none", days: [false,false,false,false,false,false,false] }]);
+      const rename = (idx, name) => setHabits(prev => prev.map((h,i)=> i===idx ? {...h, name} : h));
+      const setCat = (idx, cat) => setHabits(prev => prev.map((h,i)=> i===idx ? {...h, cat} : h));
+      const toggle = (idx, dayIdx) => setHabits(prev => prev.map((h,i)=> i===idx ? {...h, days: h.days.map((v,j)=> j===dayIdx ? !v : v)} : h));
+      const remove = (idx) => setHabits(prev => prev.filter((_,i)=> i!==idx));
+      const resetWeek = () => setHabits(prev => prev.map(h => ({...h, days: [false,false,false,false,false,false,false]})));
+
+      const completedCount = habits.reduce((acc, h) => acc + h.days.filter(Boolean).length, 0);
+      const totalCount = habits.length * 7;
+      const pct = totalCount ? Math.round(completedCount * 100 / totalCount) : 0;
+
+      const exportJson = () => {
+        const blob = new Blob([JSON.stringify({ habits }, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob); const a = document.createElement("a");
+        a.href = url; a.download = "habits.json"; a.click(); URL.revokeObjectURL(url);
+      };
+      const importJson = (file) => {
+        const reader = new FileReader();
+        reader.onload = () => { try { const data = JSON.parse(reader.result); if (data.habits) setHabits(data.habits); } catch { alert("Invalid JSON."); } };
+        reader.readAsText(file);
+      };
+
+      return (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-bold">Habit Tracker</h2>
+            <div className="chip">Week progress: {pct}%</div>
+          </div>
+
+          <div className="space-y-3">
+            {habits.map((h, idx) => (
+              <HabitRow key={idx} name={h.name} state={h.days} cat={h.cat}
+                        onToggle={(dayIdx)=>toggle(idx, dayIdx)}
+                        onRename={(name)=>rename(idx, name)}
+                        onRemove={()=>remove(idx)}
+                        onCat={(cat)=>setCat(idx, cat)} />
+            ))}
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <button className="btn" onClick={addHabit}>➕ Add habit</button>
+            <button className="btn" onClick={resetWeek}>🔄 Reset week</button>
+            <button className="btn" onClick={save}>💾 Save</button>
+            <button className="btn" onClick={exportJson}>⬇️ Export JSON</button>
+            <label className="btn cursor-pointer">⬆️ Import JSON
+              <input type="file" accept="application/json" className="hidden" onChange={(e)=>e.target.files[0] && importJson(e.target.files[0])} />
+            </label>
+          </div>
+
+          <p className="tagline">Tip: press <span className="kbd">Ctrl/Cmd + P</span> to print your progress.</p>
+        </div>
+      );
+    }
+
+    // Assignments
+    function toCSV(rows) {
+      const esc = (s) => ('"'+ String(s).replace(/"/g,'""') +'"');
+      const header = ["Emoji","Category","Title","Course","Due Date","Time","Status","Notes"];
+      const out = [header.join(",")];
+      rows.forEach(r => out.push([esc(catById(r.cat||'none').emoji||""), esc(catById(r.cat||'none').label), esc(r.title), esc(r.course||""), esc(r.dueDate||""), esc(r.time||""), esc(r.done?"Done":"Open"), esc(r.notes||"")].join(",")));
+      return out.join("\\r\\n");
+    }
+    function buildICSFromAssignments(items, alarmMinutes=30) {
+      const lines = ["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Assignments//EN","CALSCALE:GREGORIAN"];
+      let uid = 1;
+      const pushAlarm = () => {
+        lines.push("BEGIN:VALARM");
+        lines.push(`TRIGGER:-PT${Math.max(0, parseInt(alarmMinutes||0,10))}M`);
+        lines.push("ACTION:DISPLAY");
+        lines.push("DESCRIPTION:Reminder");
+        lines.push("END:VALARM");
+      };
+      items.forEach(a => {
+        if (!a.dueDate) return;
+        const ymd = a.dueDate.replaceAll("-","");
+        const cat = catById(a.cat || "none");
+        const title = `${cat.emoji ? (cat.emoji + " ") : ""}${a.title || "Assignment"}`.replace(/,/g,"\\,");
+        lines.push("BEGIN:VEVENT");
+        lines.push(`UID:${Date.now()}-${uid++}@assignments`);
+        lines.push(`DTSTAMP:${ymd}T000000`);
+        lines.push(`SUMMARY:${title}${a.course?(" ("+a.course.replace(/,/g,"\\,")+")"):""}`);
+        lines.push(`CATEGORIES:${cat.label.replace(/,/g,"\\,")}`);
+        if (a.time) {
+          const tm = a.time.padStart(5,"0");
+          const [H,M] = tm.split(":");
+          const start = `${ymd}T${H}${M}00`;
+          const endH = String(Math.min(23, parseInt(H,10) + 1)).padStart(2,"0");
+          const end = `${ymd}T${endH}${M}00`;
+          lines.push("DTSTART:"+start);
+          lines.push("DTEND:"+end);
+        } else {
+          const dt = new Date(a.dueDate);
+          const next = new Date(dt); next.setDate(dt.getDate()+1);
+          const ymd2 = next.getFullYear()+String(next.getMonth()+1).padStart(2,"0")+String(next.getDate()).padStart(2,"0");
+          lines.push("DTSTART;VALUE=DATE:"+ymd);
+          lines.push("DTEND;VALUE=DATE:"+ymd2);
+        }
+        if (a.notes) lines.push("DESCRIPTION:" + a.notes.replace(/\\n/g," ").replace(/,/g,"\\,"));
+        pushAlarm();
+        lines.push("END:VEVENT");
+      });
+      lines.push("END:VCALENDAR");
+      return lines.join("\\r\\n");
+    }
+
+    function AssignmentsApp() {
+      const [items, setItems] = useState([]);
+      const [filter, setFilter] = useState("open");
+      const [sort, setSort] = useState("due");
+      const [alarmMin, setAlarmMin] = useState(30);
+      const [includePlanner, setIncludePlanner] = useState(false);
+      const [plannerWeekStart, setPlannerWeekStart] = useState("");
+
+      // new item form
+      const [title, setTitle] = useState("");
+      const [course, setCourse] = useState("");
+      const [dueDate, setDueDate] = useState("");
+      const [time, setTime] = useState("");
+      const [notes, setNotes] = useState("");
+      const [cat, setCat] = useState("none");
+
+      useEffect(() => {
+        const saved = localStorage.getItem("assignments-data");
+        if (saved) { try { setItems(JSON.parse(saved)); } catch {} }
+      }, []);
+
+      const save = () => { localStorage.setItem("assignments-data", JSON.stringify(items)); alert("Assignments saved to your browser."); };
+      const add = () => {
+        if (!title.trim()) return alert("Title required");
+        const obj = { id: Date.now(), title, course, dueDate, time, notes, done: false, cat };
+        setItems(prev => [...prev, obj]);
+        setTitle(""); setCourse(""); setDueDate(""); setTime(""); setNotes(""); setCat("none");
+      };
+      const toggle = (id) => setItems(prev => prev.map(x => x.id===id ? {...x, done: !x.done} : x));
+      const remove = (id) => setItems(prev => prev.filter(x => x.id !== id));
+      const clearDone = () => setItems(prev => prev.filter(x => !x.done));
+
+      const exportJson = () => {
+        const blob = new Blob([JSON.stringify({ items }, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob); const a = document.createElement("a");
+        a.href = url; a.download = "assignments.json"; a.click(); URL.revokeObjectURL(url);
+      };
+      const importJson = (file) => {
+        const reader = new FileReader();
+        reader.onload = () => { try { const data = JSON.parse(reader.result); if (data.items) setItems(data.items); } catch { alert("Invalid JSON."); } };
+        reader.readAsText(file);
+      };
+      const exportCSV = () => {
+        const rows = [...items];
+        const csv = toCSV(rows);
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+        const url = URL.createObjectURL(blob); const a = document.createElement("a");
+        a.href = url; a.download = "assignments.csv"; a.click(); URL.revokeObjectURL(url);
+      };
+      function buildPlannerVEVENTsForAssignments(weekStartDate) {
+        const vevents = [];
+        if (!weekStartDate) return vevents;
+        try {
+          const saved = localStorage.getItem("planner-schedule");
+          const schedule = saved ? JSON.parse(saved) : null;
+          if (!schedule) return vevents;
+          const start = new Date(weekStartDate);
+          const dayIdx = (start.getDay() + 6) % 7;
+          const monday = new Date(start); monday.setDate(start.getDate() - dayIdx);
+          const yyyymmdd = (d) => d.getFullYear()+String(d.getMonth()+1).padStart(2,"0")+String(d.getDate()).padStart(2,"0");
+          const pad2 = (n) => String(n).padStart(2,"0");
+          const hhmmss = (h,m) => pad2(h)+pad2(m)+"00";
+          let uid = 10000;
+          for (let i=0;i<dayOrder.length;i++) {
+            const date = new Date(monday); date.setDate(monday.getDate() + i);
+            const ymd = yyyymmdd(date);
+            (schedule[dayOrder[i]]||[]).forEach(line => {
+              const isAllDay = /(^|\\b)(Relax|Rest)(\\b|$)/i.test(line);
+              const parts = line.split(":");
+              const summary = (parts.length>1?parts.slice(1).join(":"):line).trim().replace(/\\n/g," ").replace(/,/g,"\\,");
+              const base = ["BEGIN:VEVENT",`UID:${Date.now()}-${uid++}@plannermerge`,`DTSTAMP:${ymd}T000000`,`SUMMARY:${summary}`];
+              if (isAllDay) {
+                const next = new Date(date); next.setDate(date.getDate()+1);
+                const ymd2 = yyyymmdd(next);
+                base.push("DTSTART;VALUE=DATE:"+ymd);
+                base.push("DTEND;VALUE=DATE:"+ymd2);
+              } else {
+                const [timePartRaw] = line.split(":");
+                const timePart = timePartRaw.trim();
+                let m = timePart.match(/^(\\d{1,2})(?::(\\d{2}))?\\s*[–-]\\s*(\\d{1,2})(?::(\\d{2}))?\\s*(AM|PM)$/i);
+                if (m) {
+                  const [, h1, m1, h2, m2, period] = m;
+                  const to24 = (h, m, period) => { let hour=parseInt(h,10); let minute=parseInt(m||"0",10); const up=period.toUpperCase(); if (up==="AM"){ if(hour===12) hour=0; } else { if(hour!==12) hour+=12; } return {hour,minute}; };
+                  let s = to24(h1, m1||"0", period); let e = to24(h2, m2||"0", period);
+                  if (period.toUpperCase()==="PM" && e.hour < s.hour) s = to24(h1, m1||"0", "AM");
+                  base.push(`DTSTART:${ymd}T${hhmmss(s.hour, s.minute)}`);
+                  base.push(`DTEND:${ymd}T${hhmmss(e.hour, e.minute)}`);
+                }
+              }
+              base.push("BEGIN:VALARM","TRIGGER:-PT30M","ACTION:DISPLAY","DESCRIPTION:Reminder","END:VALARM");
+              base.push("END:VEVENT");
+              vevents.push(base.join("\\r\\n"));
+            });
+          }
+        } catch {}
+        return vevents;
+      }
+      const exportICS = () => {
+        const itemsOpen = items.filter(x => !x.done);
+        let ics = buildICSFromAssignments(itemsOpen, alarmMin);
+        if (includePlanner) {
+          const vevents = buildPlannerVEVENTsForAssignments(plannerWeekStart);
+          if (vevents.length) ics = ics.replace("END:VCALENDAR", vevents.join("\\r\\n") + "\\r\\nEND:VCALENDAR");
+        }
+        const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
+        const url = URL.createObjectURL(blob); const a = document.createElement("a");
+        a.href = url; a.download = "assignments_plus.ics"; a.click(); URL.revokeObjectURL(url);
+      };
+      const addToApple = () => {
+        const itemsOpen = items.filter(x => !x.done);
+        let ics = buildICSFromAssignments(itemsOpen, alarmMin);
+        if (includePlanner) {
+          const vevents = buildPlannerVEVENTsForAssignments(plannerWeekStart);
+          if (vevents.length) ics = ics.replace("END:VCALENDAR", vevents.join("\\r\\n") + "\\r\\nEND:VCALENDAR");
+        }
+        window.openInAppleCalendar(ics);
+      };
+
+      const visible = items
+        .filter(x => filter==="all" ? true : filter==="open" ? !x.done : x.done)
+        .sort((a,b) => {
+          if (sort==="title") return a.title.localeCompare(b.title);
+          const ad = a.dueDate || "9999-12-31";
+          const bd = b.dueDate || "9999-12-31";
+          if (ad!==bd) return ad.localeCompare(bd);
+          return (a.time||"").localeCompare(b.time||"");
+        });
+
+      return (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-bold">Assignment Checklist</h2>
+            <div className="flex items-center gap-2">
+              <select className="border border-slate-300 rounded-md text-sm px-2 py-1" value={filter} onChange={e=>setFilter(e.target.value)}>
+                <option value="open">Open</option>
+                <option value="all">All</option>
+                <option value="done">Done</option>
+              </select>
+              <select className="border border-slate-300 rounded-md text-sm px-2 py-1" value={sort} onChange={e=>setSort(e.target.value)}>
+                <option value="due">Sort by Due</option>
+                <option value="title">Sort by Title</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="card p-4 space-y-3">
+            <div className="grid md:grid-cols-6 gap-2">
+              <input className="border border-slate-300 rounded-md px-3 py-2 text-sm" placeholder="Title *" value={title} onChange={e=>setTitle(e.target.value)} />
+              <input className="border border-slate-300 rounded-md px-3 py-2 text-sm" placeholder="Course" value={course} onChange={e=>setCourse(e.target.value)} />
+              <input type="date" className="border border-slate-300 rounded-md px-3 py-2 text-sm" value={dueDate} onChange={e=>setDueDate(e.target.value)} />
+              <input type="time" className="border border-slate-300 rounded-md px-3 py-2 text-sm" value={time} onChange={e=>setTime(e.target.value)} />
+              <select className="border border-slate-300 rounded-md text-sm px-2 py-2" value={cat} onChange={e=>setCat(e.target.value)}>
+                {CATS.map(cc => <option key={cc.id} value={cc.id}>{cc.label}</option>)}
+              </select>
+              <button className="btn" onClick={add}>➕ Add</button>
+            </div>
+            <textarea className="w-full border border-slate-300 rounded-md p-3 text-sm" placeholder="Notes (optional)" value={notes} onChange={e=>setNotes(e.target.value)} />
+          </div>
+
+          <div className="space-y-2">
+            {visible.map(item => {
+              const c = catById(item.cat || "none");
+              return (
+                <div key={item.id} className="flex flex-col md:flex-row md:items-center justify-between gap-2 p-3 rounded-xl border border-slate-200">
+                  <div className="flex items-center gap-3">
+                    <span className={`chip ${c.chip}`}>{c.emoji || "•"}</span>
+                    <input type="checkbox" checked={item.done} onChange={()=>toggle(item.id)} />
+                    <div>
+                      <div className="font-medium">{item.title} {item.course ? <span className="chip">{item.course}</span> : null}</div>
+                      <div className="text-xs text-slate-500">
+                        {item.dueDate ? `Due: ${item.dueDate}${item.time?(" " + item.time):""}` : "No due date"}
+                      </div>
+                      {item.notes ? <div className="text-xs text-slate-600 mt-1 whitespace-pre-wrap">{item.notes}</div> : null}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 self-start md:self-auto">
+                    <button className="btn" onClick={()=>remove(item.id)}>🗑 Remove</button>
+                  </div>
+                </div>
+              );
+            })}
+            {!visible.length && <div className="text-slate-500 text-sm">No assignments here.</div>}
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <button className="btn" onClick={save}>💾 Save</button>
+            <button className="btn" onClick={clearDone}>🧹 Clear Done</button>
+            <button className="btn" onClick={exportJson}>⬇️ Export JSON</button>
+            <label className="btn cursor-pointer">⬆️ Import JSON
+              <input type="file" accept="application/json" className="hidden" onChange={(e)=>e.target.files[0] && importJson(e.target.files[0])} />
+            </label>
+            <button className="btn" onClick={exportCSV}>📄 Export CSV</button>
+            <div className="flex items-center gap-2">
+              <span className="tagline">ICS reminder (min):</span>
+              <input type="number" className="w-20 border border-slate-300 rounded-md px-2 py-1 text-sm" value={alarmMin} onChange={(e)=>setAlarmMin(e.target.value)} />
+            </div>
+            <label className="inline-flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={includePlanner} onChange={(e)=>setIncludePlanner(e.target.checked)} />
+              Include Planner in .ics
+            </label>
+            <label className="inline-flex items-center gap-2 text-sm">
+              Week start for Planner:
+              <input type="date" className="border border-slate-300 rounded-md px-2 py-1 text-sm" value={plannerWeekStart} onChange={(e)=>setPlannerWeekStart(e.target.value)} />
+            </label>
+            <button className="btn" onClick={exportICS}>⬇️ Export .ics</button>
+            <button className="btn" onClick={addToApple}>🍎 Add to Apple Calendar</button>
+          </div>
+        </div>
+      );
+    }
+
+    // Mount
+    ReactDOM.createRoot(document.getElementById("planner-app")).render(<PlannerApp />);
+    ReactDOM.createRoot(document.getElementById("habits-app")).render(<HabitsApp />);
+    ReactDOM.createRoot(document.getElementById("assignments-app")).render(<AssignmentsApp />);
+  </script>
+
+  <script type="text/babel">
+    const { useState, useEffect, useMemo } = React;
+    function TagChip({ tag, onRemove }){
+      return (<span className="inline-flex items-center gap-1 chip mr-2 mb-2">#{tag}{onRemove && <button className="text-slate-500 hover:text-red-600" onClick={onRemove} title="Remove tag">×</button>}</span>);
+    }
+    function NoteCard({ note, onEdit, onDelete, onTogglePin }){
+      return (
+        <div className="card p-4 border border-slate-200">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <div className="text-lg font-semibold flex items-center gap-2">{note.pinned && <span title="Pinned">📌</span>}<span>{note.title || "Untitled"}</span></div>
+              <div className="mt-1 text-xs text-slate-500">Updated {new Date(note.updatedAt).toLocaleString()}</div>
+            </div>
+            <div className="flex gap-2">
+              <button className="btn" onClick={()=>onTogglePin(note.id)}>{note.pinned ? "Unpin" : "Pin"}</button>
+              <button className="btn" onClick={()=>onEdit(note.id)}>Edit</button>
+              <button className="btn" onClick={()=>onDelete(note.id)}>Delete</button>
+            </div>
+          </div>
+          {note.tags?.length>0 && (<div className="mt-3">{note.tags.map((t,i)=><TagChip key={i} tag={t} />)}</div>)}
+          {note.text && (<div className="mt-3 whitespace-pre-wrap text-sm">{note.text}</div>)}
+        </div>
+      );
+    }
+    function NotesApp(){
+      const [notes, setNotes] = useState([]);
+      const [editingId, setEditingId] = useState(null);
+      const [title, setTitle] = useState(""); const [tagsInput, setTagsInput] = useState(""); const [text, setText] = useState("");
+      const [search, setSearch] = useState(""); const [onlyPinned, setOnlyPinned] = useState(false);
+      useEffect(()=>{ const raw = localStorage.getItem("notes-data"); if(raw){ try{ setNotes(JSON.parse(raw)); }catch{} }},[]);
+      useEffect(()=>{ localStorage.setItem("notes-data", JSON.stringify(notes)); },[notes]);
+      const tagArray = (tagsInput||"").split(",").map(t=>t.trim()).filter(Boolean);
+      const filtered = useMemo(()=>{ const q=(search||"").trim().toLowerCase(); return notes.filter(n=>!onlyPinned||n.pinned).filter(n=>!q || (n.title||'').toLowerCase().includes(q) || (n.text||'').toLowerCase().includes(q) || (n.tags||[]).some(t=>t.toLowerCase().includes(q))).sort((a,b)=> (b.pinned - a.pinned) || (new Date(b.updatedAt) - new Date(a.updatedAt))); },[notes,search,onlyPinned]);
+      function resetForm(){ setEditingId(null); setTitle(""); setTagsInput(""); setText(""); }
+      function startNew(){ resetForm(); window.scrollTo({top:0, behavior:"smooth"}); }
+      function startEdit(id){ const n=notes.find(x=>x.id===id); if(!n) return; setEditingId(id); setTitle(n.title||""); setTagsInput((n.tags||[]).join(", ")); setText(n.text||""); window.scrollTo({top:0, behavior:"smooth"}); }
+      function saveNote(){ const now=new Date().toISOString(); if(editingId){ setNotes(prev=>prev.map(n=>n.id===editingId?{...n,title,tags:tagArray,text,updatedAt:now}:n)); } else { setNotes(prev=>[{id:Date.now(), title, tags:tagArray, text, pinned:false, updatedAt:now}, ...prev]); } resetForm(); }
+      function removeNote(id){ if(confirm("Delete this note?")) setNotes(prev=>prev.filter(n=>n.id!==id)); }
+      function togglePin(id){ setNotes(prev=>prev.map(n=>n.id===id?{...n,pinned:!n.pinned,updatedAt:new Date().toISOString()}:n)); }
+      function exportJSON(){ const blob=new Blob([JSON.stringify({notes},null,2)],{type:"application/json"}); const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download="notes.json"; a.click(); URL.revokeObjectURL(url); }
+      function exportMD(){ const md=notes.map(n=>`# ${n.title||"Untitled"}\n${n.tags?.length?("Tags: "+n.tags.map(t=>"#"+t).join(" ")+"\n"):""}${n.text||""}\n\n---\n\n`).join(""); const blob=new Blob([md],{type:"text/markdown;charset=utf-8"}); const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download="notes.md"; a.click(); URL.revokeObjectURL(url); }
+      function importJSON(file){ const r=new FileReader(); r.onload=()=>{ try{ const data=JSON.parse(r.result); if(Array.isArray(data.notes)) setNotes(data.notes); else if(Array.isArray(data)) setNotes(data); else alert("Invalid JSON format."); }catch{ alert("Invalid JSON file."); } }; r.readAsText(file); }
+      return (<div className="space-y-4">
+        <div className="flex items-center justify-between"><h2 className="text-2xl font-bold">Notes</h2>
+          <div className="flex items-center gap-2">
+            <input className="px-3 py-1.5 border border-slate-300 rounded-md text-sm" placeholder="Search notes..." value={search} onChange={e=>setSearch(e.target.value)} />
+            <label className="text-sm inline-flex items-center gap-2"><input type="checkbox" checked={onlyPinned} onChange={e=>setOnlyPinned(e.target.checked)} /> Pinned only</label>
+            <button className="btn" onClick={exportJSON}>⬇️ Export JSON</button>
+            <button className="btn" onClick={exportMD}>⬇️ Export Markdown</button>
+            <label className="btn cursor-pointer">⬆️ Import JSON<input type="file" accept="application/json" className="hidden" onChange={(e)=>e.target.files[0] && importJSON(e.target.files[0])} /></label>
+            <button className="btn" onClick={startNew}>➕ New</button>
+          </div>
+        </div>
+        <div className="card p-4 space-y-3">
+          <div className="grid md:grid-cols-2 gap-3">
+            <div><label className="block text-sm font-medium">Title</label><input className="w-full px-3 py-2 border border-slate-300 rounded-md" value={title} onChange={e=>setTitle(e.target.value)} placeholder="e.g., Study plan for Friday" /></div>
+            <div><label className="block text-sm font-medium">Tags (comma separated)</label><input className="w-full px-3 py-2 border border-slate-300 rounded-md" value={tagsInput} onChange={e=>setTagsInput(e.target.value)} placeholder="study, gym, errands" /></div>
+          </div>
+          <div><label className="block text-sm font-medium">Text</label><textarea className="w-full min-h-[160px] px-3 py-2 border border-slate-300 rounded-md" value={text} onChange={e=>setText(e.target.value)} placeholder="Write your note here… Emojis welcome: 🟦 🟩 🔴 🟨 🟪 🌙" /></div>
+          <div className="flex items-center gap-2"><button className="btn" onClick={saveNote}>{editingId ? "💾 Save changes" : "💾 Save note"}</button>{editingId && <button className="btn" onClick={()=>{resetForm();}}>Cancel</button>}<span className="tagline">Autosaves to your browser (localStorage).</span></div>
+        </div>
+        <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {filtered.map(n => <NoteCard key={n.id} note={n} onEdit={startEdit} onDelete={removeNote} onTogglePin={togglePin} />)}
+          {filtered.length===0 && (<div className="text-center text-slate-500 py-10">No notes yet. Click “New” to add one.</div>)}
+        </div>
+      </div>);
+    }
+    (function(){ const el=document.getElementById("notes-app"); if(el){ ReactDOM.createRoot(el).render(<NotesApp />); } })();
+  </script>
+
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+    // IndexedDB tiny helpers
+    const DB_NAME = "planner-backup"; const STORE = "kv";
+    function idbOpen(){ return new Promise((resolve,reject)=>{ const req = indexedDB.open(DB_NAME,1); req.onupgradeneeded = ()=>{ const db=req.result; if(!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE); }; req.onsuccess=()=>resolve(req.result); req.onerror=()=>reject(req.error); }); }
+    async function idbSet(key, value){ const db = await idbOpen(); return new Promise((res,rej)=>{ const tx=db.transaction(STORE,"readwrite"); tx.objectStore(STORE).put(value,key); tx.oncomplete=()=>res(); tx.onerror=()=>rej(tx.error); }); }
+    async function idbGet(key){ const db = await idbOpen(); return new Promise((res,rej)=>{ const tx=db.transaction(STORE,"readonly"); const rq=tx.objectStore(STORE).get(key); rq.onsuccess=()=>res(rq.result); rq.onerror=()=>rej(rq.error); }); }
+    async function idbDel(key){ const db = await idbOpen(); return new Promise((res,rej)=>{ const tx=db.transaction(STORE,"readwrite"); tx.objectStore(STORE).delete(key); tx.oncomplete=()=>res(); tx.onerror=()=>rej(tx.error); }); }
+    function collectAllData(){ return { version:1, savedAt:new Date().toISOString(), planner:{ schedule: JSON.parse(localStorage.getItem("planner-schedule")||"null"), notes: localStorage.getItem("planner-notes")||"" }, habits: JSON.parse(localStorage.getItem("habits-data")||"[]"), assignments: JSON.parse(localStorage.getItem("assignments-data")||"[]"), notes: JSON.parse(localStorage.getItem("notes-data")||"[]") }; }
+    function applyAllData(bundle){ try{ if(bundle.planner?.schedule) localStorage.setItem("planner-schedule", JSON.stringify(bundle.planner.schedule)); if(typeof bundle.planner?.notes === "string") localStorage.setItem("planner-notes", bundle.planner.notes); if(bundle.habits) localStorage.setItem("habits-data", JSON.stringify(bundle.habits)); if(bundle.assignments) localStorage.setItem("assignments-data", JSON.stringify(bundle.assignments)); if(bundle.notes) localStorage.setItem("notes-data", JSON.stringify(bundle.notes)); return true; }catch(e){ console.error(e); return false; } }
+    function SettingsApp(){
+      const [persisted, setPersisted] = useState(null);
+      const [hasHandle, setHasHandle] = useState(false);
+      const [autosave, setAutosave] = useState(false);
+      const [autoRestore, setAutoRestore] = useState(false);
+      const [status, setStatus] = useState("");
+      const [weekStartICS, setWeekStartICS] = useState("");
+      useEffect(()=>{ (async()=>{ if(navigator.storage && navigator.storage.persisted){ try{ setPersisted(await navigator.storage.persisted()); }catch{} } try{ const h=await idbGet("backup-handle"); setHasHandle(!!h);}catch{} try{ const ar=await idbGet("auto-restore"); setAutoRestore(!!ar);}catch{} })(); },[]);
+      useEffect(()=>{ let t=null; if(autosave){ t=setInterval(async ()=>{ const handle=await idbGet("backup-handle"); if(!handle) return; await saveToHandle(handle); setStatus("Autosaved at " + new Date().toLocaleTimeString()); }, 30000); } return ()=> t && clearInterval(t); },[autosave]);
+      async function enablePersistent(){ if (!navigator.storage || !navigator.storage.persist) { alert("Persistent storage not supported in this browser."); return; } const ok = await navigator.storage.persist(); setPersisted(ok); setStatus(ok ? "Persistent storage granted." : "Request was denied."); }
+      async function chooseBackup(){ if(!window.showSaveFilePicker){ alert("Your browser doesn't support the File System Access API. Use Export JSON instead."); return; } const handle = await window.showSaveFilePicker({ suggestedName:"planner_backup.json", types:[{description:"JSON", accept:{ "application/json": [".json"] }}]}); await idbSet("backup-handle", handle); setHasHandle(true); setStatus("Backup file selected."); await saveToHandle(handle); }
+      async function saveToHandle(handle){ const writable = await handle.createWritable(); const data = collectAllData(); await writable.write(new Blob([JSON.stringify(data,null,2)],{type:"application/json"})); await writable.close(); }
+      async function saveNow(){ const handle=await idbGet("backup-handle"); if(!handle){ alert("Choose a backup file first."); return; } await saveToHandle(handle); setStatus("Saved to backup file."); }
+      async function forgetBackup(){ await idbDel("backup-handle"); await idbDel("auto-restore"); setHasHandle(false); setStatus("Forgot backup file."); }
+      async function restoreFromFile(){ try{ if(!window.showOpenFilePicker){ alert("Your browser doesn't support file picker. Use the Import buttons on each tab instead."); return; } const [handle] = await window.showOpenFilePicker({ types:[{description:"JSON", accept:{"application/json":[".json"]}}]}); const file = await handle.getFile(); const text = await file.text(); const data = JSON.parse(text); if (applyAllData(data)) { setStatus("Restored. Reload the page to see all changes."); } else { setStatus("Restore failed."); } }catch(e){ console.error(e); setStatus("Restore canceled or failed."); } }
+      // ICS helpers
+      function unfoldICS(text){ return text.replace(/\r\n[ \t]/g, '').replace(/\n[ \t]/g, ''); }
+      function parseICSDate(v){ const s=String(v).trim(); const y=parseInt(s.slice(0,4),10), m=parseInt(s.slice(4,6),10)-1, d=parseInt(s.slice(6,8),10); if(s.length<=8){ return {date:new Date(y,m,d,0,0,0), allDay:true}; } else { const hh=parseInt(s.slice(9,11)||'0',10); const mm=parseInt(s.slice(11,13)||'0',10); const ss=parseInt(s.slice(13,15)||'0',10); return {date:new Date(y,m,d,hh,mm,ss), allDay:false}; } }
+      function parseICS(text){ const t=unfoldICS(text); const blocks=t.split(/BEGIN:VEVENT/).slice(1).map(b=>'BEGIN:VEVENT'+b.split(/END:VEVENT/)[0]+'END:VEVENT'); const events=[]; for(const b of blocks){ const lines=b.split(/\r?\n/); let dtstart=null, dtend=null, allDay=false, summary='', description=''; for(let ln of lines){ if(!ln) continue; if(ln.startsWith('DTSTART')){ const val=ln.split(':').slice(1).join(':').trim(); const parsed=parseICSDate(val); dtstart=parsed.date; if(parsed.allDay) allDay=true; } else if(ln.startsWith('DTEND')){ const val=ln.split(':').slice(1).join(':').trim(); const parsed=parseICSDate(val); dtend=parsed.date; } else if(ln.startsWith('SUMMARY')){ summary=ln.split(':').slice(1).join(':').trim(); } else if(ln.startsWith('DESCRIPTION')){ description=ln.split(':').slice(1).join(':').trim(); } } if(dtstart){ events.push({ start: dtstart, end: dtend||dtstart, allDay, summary, description }); } } return events; }
+      function formatTime12(date){ let h=date.getHours(), m=date.getMinutes(); const am=h<12; h=h%12; if(h===0) h=12; const mm=String(m).padStart(2,'0'); return `${h}:${mm} ${am?'AM':'PM'}`; }
+      function weekRangeFromStart(startStr){ const start=new Date(startStr); const dayIdx=(start.getDay()+6)%7; const monday=new Date(start); monday.setDate(start.getDate()-dayIdx); const sunday=new Date(monday); sunday.setDate(monday.getDate()+6); return {monday,sunday}; }
+      async function importIcsToPlannerThisWeek(file, weekStart){ const text = await file.text(); const evs = parseICS(text); const { monday, sunday } = weekRangeFromStart(weekStart); let sched = {}; try{ sched = JSON.parse(localStorage.getItem("planner-schedule")||"{}") || {}; }catch{ sched = {}; } const days = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"]; days.forEach(d=>{ if(!Array.isArray(sched[d])) sched[d]=[]; }); evs.forEach(ev=>{ const d=ev.start; if (d<monday || d> sunday) return; const dayName = days[(d.getDay()+6)%7]; if(ev.allDay){ sched[dayName].push(`All-day: ${ev.summary || "(No title)"}`); } else { sched[dayName].push(`${formatTime12(ev.start)}–${formatTime12(ev.end||new Date(d.getTime()+60*60*1000))}: ${ev.summary || "(No title)"}`); } }); localStorage.setItem("planner-schedule", JSON.stringify(sched)); }
+      async function importIcsToAssignments(file){ const text=await file.text(); const evs=parseICS(text); let items=[]; try{ items = JSON.parse(localStorage.getItem("assignments-data")||"[]"); }catch{ items=[]; } evs.forEach((ev,idx)=>{ const dueDate = `${ev.start.getFullYear()}-${String(ev.start.getMonth()+1).padStart(2,'0')}-${String(ev.start.getDate()).padStart(2,'0')}`; const time = ev.allDay ? "" : `${String(ev.start.getHours()).padStart(2,'0')}:${String(ev.start.getMinutes()).padStart(2,'0')}`; items.push({ id: Date.now()+idx, title: ev.summary || "Calendar item", course: "", dueDate, time, notes: ev.description || "", done:false, cat:"none" }); }); localStorage.setItem("assignments-data", JSON.stringify(items)); }
+      function SettingsUI(){
+        return (<div className="space-y-4">
+          <h2 className="text-2xl font-bold">Settings & Backup</h2>
+          <div className="card p-4 space-y-3">
+            <div className="font-semibold">Make browser storage harder to clear</div>
+            <div className="text-sm text-slate-600">{persisted===null ? "Checking…" : persisted ? "Persistent storage is ON for this site." : "Persistent storage is OFF."}</div>
+            <button className="btn" onClick={enablePersistent}>Request persistent storage</button>
+            <div className="text-xs text-slate-500">Reduces the chance the browser auto-clears your data. Works best on Chromium/Firefox over HTTPS.</div>
+          </div>
+          <div className="card p-4 space-y-3">
+            <div className="font-semibold">Backup to a real file (never lost)</div>
+            <div className="text-sm text-slate-600">{hasHandle ? "Backup file is selected. You can Save now or enable autosave." : "No backup file chosen yet."}</div>
+            <div className="flex flex-wrap gap-2">
+              <button className="btn" onClick={chooseBackup}>📁 Choose backup .json</button>
+              <button className="btn" onClick={saveNow}>💾 Save now</button>
+              <label className="inline-flex items-center gap-2 text-sm"><input type="checkbox" checked={autosave} onChange={(e)=>setAutosave(e.target.checked)} /> Autosave every 30s</label>
+              {hasHandle && <button className="btn" onClick={forgetBackup}>🗑 Forget backup file</button>}
+            </div>
+            <div className="text-xs text-slate-500">Uses the File System Access API; you may be asked to grant write permission. Keep the chosen file somewhere you back up.</div>
+          </div>
+          <div className="card p-4 space-y-3">
+            <div className="font-semibold">Auto-restore on startup</div>
+            <div className="flex items-center gap-2">
+              <label className="inline-flex items-center gap-2 text-sm">
+                <input type="checkbox" checked={autoRestore} onChange={async (e)=>{ setAutoRestore(e.target.checked); if(e.target.checked){ await idbSet("auto-restore", true); setStatus("Auto-restore enabled."); } else { await idbDel("auto-restore"); setStatus("Auto-restore disabled."); } }} /> Restore from backup file when the page loads
+              </label>
+            </div>
+            <div className="text-xs text-slate-500">Requires a chosen backup file above. Some browsers may still ask for permission to read the file.</div>
+          </div>
+          <div className="card p-4 space-y-3">
+            <div className="font-semibold">One-click export / restore</div>
+            <div className="flex flex-wrap gap-2">
+              <button className="btn" onClick={()=>{ const data=collectAllData(); const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}); const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download="planner_bundle.json"; a.click(); URL.revokeObjectURL(url); }}>⬇️ Export ALL data (.json)</button>
+              <button className="btn" onClick={restoreFromFile}>⬆️ Restore from .json</button>
+            </div>
+            <div className="text-xs text-slate-500">This bundles Planner, Habits, Assignments, and Notes into one JSON file.</div>
+          </div>
+          <div className="card p-4 space-y-3">
+            <div className="font-semibold">Import Calendar (.ics)</div>
+            <p className="text-sm text-slate-600">Choose a week start to merge calendar events into your Planner for that week, or import as Assignments.</p>
+            <div className="flex flex-wrap items-center gap-2">
+              <label className="text-sm inline-flex items-center gap-2">Week starts on: <input type="date" className="border border-slate-300 rounded-md px-2 py-1 text-sm" value={weekStartICS} onChange={(e)=>setWeekStartICS(e.target.value)} /></label>
+              <label className="btn cursor-pointer">⬆️ Import .ics → Planner (this week)<input type="file" accept=".ics,text/calendar" className="hidden" onChange={async (e)=>{ const f=e.target.files && e.target.files[0]; if(!f) return; if(!weekStartICS){ alert("Pick a week start date first."); e.target.value=null; return; } await importIcsToPlannerThisWeek(f, weekStartICS); alert("Imported calendar events into your Planner for the selected week."); e.target.value=null; }} /></label>
+              <label className="btn cursor-pointer">⬆️ Import .ics → Assignments<input type="file" accept=".ics,text/calendar" className="hidden" onChange={async (e)=>{ const f=e.target.files && e.target.files[0]; if(!f) return; await importIcsToAssignments(f); alert("Imported calendar events as assignments."); e.target.value=null; }} /></label>
+            </div>
+          </div>
+          {status && <div className="text-sm text-green-700">{status}</div>}
+        </div>);
+      }
+      useEffect(()=>{},[]);
+      return SettingsUI();
+    }
+    (function(){ const el=document.getElementById("settings-app"); if(el){ ReactDOM.createRoot(el).render(<SettingsApp />); } })();
+  </script>
+
+</body>
+</html>
