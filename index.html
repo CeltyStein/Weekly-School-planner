@@ -4,11 +4,17 @@
     <!-- Custom background image -->
     <style>
 body{
-        /* Use a CSS radial-gradient to provide a dark, moody background without requiring a separate image file. */
-        background-image: radial-gradient(circle at center, rgb(46, 2, 73) 0%, rgb(87, 10, 87) 40%, rgb(10, 1, 20) 100%) !important;
+        /* Use a CSS radial gradient directly so the page remains self‑contained when
+         * hosted on a service like GitHub Pages. This gradient approximates the
+         * deep blues and purples of the provided image without requiring an
+         * external file.  We specify the `!important` flag to override Tailwind
+         * defaults. */
+        background-image: radial-gradient(circle at center, #0d1f43 0%, #3e0675 100%) !important;
         background-size: cover !important;
         background-position: center center !important;
         background-attachment: fixed !important;
+        /* Make all global text white for better contrast against the dark background */
+        color: #f1f5f9 !important;
       }
     </style>
   <meta charset="utf-8" />
@@ -24,7 +30,8 @@ body{
       /* Use a lighter radial gradient inside the card so it stands out against the dark page background */
       background-image: radial-gradient(circle at center, rgba(100,60,140,0.6) 0%, rgba(30,15,50,0.85) 100%);
       background-color: rgba(30,15,50,0.85);
-      color: inherit;
+      /* Set card text to a light color for readability on dark backgrounds */
+      color: #f1f5f9;
     }
     .card:hover {
       /* Intensify the shadow on hover for a raised effect */
@@ -36,7 +43,7 @@ body{
       /* Remove the default white background */
       background-image: radial-gradient(circle at center, rgba(120,80,160,0.5) 0%, rgba(40,20,70,0.8) 100%);
       background-color: rgba(40,20,70,0.8);
-      color: inherit;
+      color: #f1f5f9;
       border: 1px solid rgba(255,255,255,0.1);
     }
     .btn { border: 1px solid rgb(203 213 225); padding: 0.45rem 0.8rem; border-radius: 0.6rem; font-size: .9rem; }
@@ -46,11 +53,10 @@ body{
     .hide { display: none !important; }
     .chip { background: #f1f5f9; color: #0f172a; padding: .25rem .6rem; border-radius: 999px; font-size: .8rem; border:1px solid #e2e8f0; }
     /* Use a dark, galaxy‑inspired backdrop across the entire page */
-    body {
-      /* Blend a radial and linear gradient for depth */
-      background: radial-gradient(1200px 800px at 10% -10%, #2b0a48 0%, #0e0a25 40%), linear-gradient(160deg, #0b0d1b 0%, #0e1224 100%);
-      color: inherit;
-    }
+    /*
+     * Removed duplicate body background rules here. The body background is now set at the top of the
+     * document with an `!important` flag to ensure it takes precedence.
+     */
     .circle { width: 22px; height: 22px; border-radius: 999px; border: 1px solid rgb(203 213 225); display: inline-flex; align-items: center; justify-content: center; }
     .circle.on { background: rgb(59 130 246); color: white; border-color: rgb(59 130 246); }
     .day-label { font-size: .7rem; color: #64748b; }
@@ -344,6 +350,30 @@ body{
       &quot;Learn Japanese — review kana, vocab, or 1 grammar point&quot;
     ];
 
+    // === Enhancements: sound/notification alerts and auto‑start ===
+    // Configuration flag: when true the timer will automatically start on page load and after each stage.
+    const autoStartEnabled = true;
+    // Audio context used to generate a short beep for transitions. We create it lazily on demand.
+    let _beepAudioCtx = null;
+    function playBeep() {
+      try {
+        if (!_beepAudioCtx) {
+          _beepAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        const ctx = _beepAudioCtx;
+        const osc = ctx.createOscillator();
+        osc.type = 'sine';
+        // A pleasant pitch around A5 (880 Hz) works well for a quick notification tone
+        osc.frequency.setValueAtTime(880, ctx.currentTime);
+        osc.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.4); // 0.4‑second beep
+      } catch(e) {
+        // If the AudioContext cannot be created (e.g. browser restrictions), quietly fail
+        console.warn('Audio beep failed', e);
+      }
+    }
+
     // --- State ---
     let cycle = 1;
     let mode = &quot;focus&quot;; // &#x27;focus&#x27; | &#x27;short&#x27; | &#x27;long&#x27;
@@ -412,9 +442,9 @@ body{
       // Suggest a break task when entering any break mode
       if(mode !== &#x27;focus&#x27;){
         suggestTask(true);
-        // Tiny attention: update document title
-        beep();
       }
+      // Always play a sound and show a notification when the mode changes
+      beep();
     }
     function nextStage(){
       if(mode===&#x27;focus&#x27;){
@@ -434,6 +464,10 @@ body{
         }
       }
       updateCycleUI();
+      // Automatically start the timer for the next stage if the flag is enabled
+      if(autoStartEnabled){
+        start();
+      }
     }
     function updateCycleUI(){
       cycleNo.textContent = cycle;
@@ -499,13 +533,32 @@ body{
       nextStage();
     }
 
-    // Minimal &quot;beep&quot; by toggling title + optional Notification API
+    // Play a sound and optionally show a desktop notification when the stage changes.
     function beep(){
-      if(document.hidden &amp;&amp; &#x27;Notification&#x27; in window){
-        if(Notification.permission === &#x27;granted&#x27;){
-          new Notification(`Time for ${mode===&#x27;focus&#x27; ? &#x27;Focus&#x27; : &#x27;a Break&#x27;}!`);
-        }else if(Notification.permission !== &#x27;denied&#x27;){
-          Notification.requestPermission();
+      // Always play the generated beep sound. If the user has interacted with the page once,
+      // browsers will permit this audio to play without additional prompts.
+      playBeep();
+      // Compose a descriptive notification message depending on the current mode.
+      if ('Notification' in window) {
+        const title = 'Pomodoro Timer';
+        const body = mode === 'focus'
+          ? `Focus session started! Work for ${FOCUS_MIN} minutes.`
+          : mode === 'short'
+            ? `Short break started! Relax for ${SHORT_BREAK_MIN} minutes.`
+            : `Long break started! Relax for ${LONG_BREAK_MIN} minutes.`;
+        const notify = () => {
+          try {
+            new Notification(title, { body });
+          } catch (e) {
+            console.warn('Notification failed', e);
+          }
+        };
+        if (Notification.permission === 'granted') {
+          notify();
+        } else if (Notification.permission !== 'denied') {
+          Notification.requestPermission().then(permission => {
+            if (permission === 'granted') notify();
+          });
         }
       }
     }
@@ -534,6 +587,10 @@ body{
     setMode(&#x27;focus&#x27;); // ensures correct label + time
     updateRender();
     suggestTask(true);
+    // Auto-start the first focus session on page load if enabled
+    if(autoStartEnabled){
+      start();
+    }
   &lt;/script&gt;
 &lt;/body&gt;
 &lt;/html&gt;
