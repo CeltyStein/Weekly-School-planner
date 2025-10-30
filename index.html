@@ -113,6 +113,27 @@ body{
       font-size: 0.75rem;
       background: #f8fafc;
     }
+
+    /* Ensure form controls inside cards (e.g., Habit Tracker inputs/selects) are readable on light backgrounds */
+    .card input,
+    .card select {
+      background-color: #ffffff;
+      color: #0f172a;
+    }
+
+    /* Override text color for calendar headers, events, and all-day tags so they remain visible on light backgrounds */
+    .cal-h,
+    .event,
+    .tag {
+      color: #0f172a;
+    }
+
+    /* Make habit tracker inputs/selects readable on light backgrounds */
+    #panelHabits input,
+    #panelHabits select {
+      background-color: #ffffff;
+      color: #0f172a;
+    }
     @media print {
       body { background: white !important; }
       header nav, .btn, input[type="file"], .hide-print, iframe { display: none !important; }
