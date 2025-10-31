@@ -113,6 +113,38 @@ body{
       font-size: 0.75rem;
       background: #f8fafc;
     }
+
+    /*
+     * Override the default dark text color on the page for specific elements that sit
+     * on light backgrounds. Without these rules, the global body color (set to
+     * a light hue at the top of the document) bleeds into form controls and
+     * calendar components, making their text invisible against the white and
+     * pastel backgrounds used throughout the UI. By explicitly specifying a
+     * dark text color here and applying a white background to inputs and
+     * selects, we ensure that habit names, dropdown values and calendar labels
+     * remain legible regardless of the surrounding theme.
+     */
+    .card input,
+    .card select {
+      background-color: #ffffff;
+      color: #0f172a;
+    }
+
+    #panelHabits input,
+    #panelHabits select {
+      background-color: #ffffff;
+      color: #0f172a;
+    }
+
+    /* Make calendar headers, events and tag text dark so they stand out on
+     * light backgrounds. These elements are drawn on pastel backgrounds by
+     * default but inherit the global body text color, which in this theme is
+     * very light. Without an override they can appear invisible. */
+    .cal-h,
+    .event,
+    .tag {
+      color: #0f172a;
+    }
     @media print {
       body { background: white !important; }
       header nav, .btn, input[type="file"], .hide-print, iframe { display: none !important; }
@@ -274,18 +306,14 @@ body{
   &lt;div class=&quot;app&quot;&gt;
     &lt;header&gt;
       &lt;h1&gt;⏳ My 4‑Cycle Pomodoro&lt;/h1&gt;
-      &lt;div class=&quot;badge&quot; id=&quot;durations&quot;&gt;52‑min focus • 17‑min short breaks • 30‑min final break&lt;/div&gt;
+      &lt;div class=&quot;badge&quot; id=&quot;durations&quot;&gt;30‑min focus • 5‑min short breaks • 30‑min final break&lt;/div&gt;
       <!-- Focus duration input moved into the timer panel for better visibility on smaller screens -->
     &lt;/header&gt;
 
     &lt;div class=&quot;timer-card&quot;&gt;
       &lt;section class=&quot;panel&quot;&gt;
-        &lt;div class=&quot;status&quot;&gt;&lt;div&gt;Mode: &lt;strong id=&quot;modeLabel&quot;&gt;Focus&lt;/strong&gt;&lt;/div&gt;&lt;/div&gt;
-        &lt;div class=&quot;time&quot; id=&quot;time&quot;&gt;52:00&lt;/div&gt;
-        &lt;!-- Cycle indicators repositioned below the timer for better visibility on smaller screens --&gt;
-        &lt;div class=&quot;cycle-counter&quot; style=&quot;margin-top:4px; font-size:14px; text-align:center; color:var(--muted)&quot;&gt;
-          &lt;span&gt;Cycle &lt;strong id=&quot;cycleNo&quot;&gt;1&lt;/strong&gt; / 4&lt;/span&gt; • &lt;span&gt;Completed &lt;strong id=&quot;cyclesCompleted&quot;&gt;0&lt;/strong&gt; / 4&lt;/span&gt;
-        &lt;/div&gt;
+        &lt;div class=&quot;status&quot;&gt;&lt;div&gt;Mode: &lt;strong id=&quot;modeLabel&quot;&gt;Focus&lt;/strong&gt;&lt;/div&gt;&lt;div&gt;Cycle &lt;strong id=&quot;cycleNo&quot;&gt;1&lt;/strong&gt; / 4&lt;/div&gt;&lt;/div&gt;
+        &lt;div class=&quot;time&quot; id=&quot;time&quot;&gt;30:00&lt;/div&gt;
         &lt;div class=&quot;progress&quot;&gt;&lt;span id=&quot;bar&quot;&gt;&lt;/span&gt;&lt;/div&gt;
         &lt;div class=&quot;controls&quot;&gt;
           &lt;button class=&quot;primary&quot; id=&quot;startPauseBtn&quot;&gt;Start&lt;/button&gt;
@@ -298,11 +326,11 @@ body{
           &lt;span class=&quot;dot&quot; id=&quot;dot3&quot;&gt;&lt;/span&gt;
           &lt;span class=&quot;dot&quot; id=&quot;dot4&quot;&gt;&lt;/span&gt;
         &lt;/div&gt;
-        &lt;div class=&quot;mode-tag&quot; id=&quot;modeHint&quot;&gt;Focus for 52 minutes.&lt;/div&gt;
+        &lt;div class=&quot;mode-tag&quot; id=&quot;modeHint&quot;&gt;Focus for 30 minutes.&lt;/div&gt;
         <!-- Relocated focus duration input so it stays visible even when the header scrolls out of view -->
         &lt;div class=&quot;focus-duration&quot; style=&quot;margin-top:12px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;&quot;&gt;
           &lt;label for=&quot;focusInput&quot;&gt;Focus duration (mins):&lt;/label&gt;
-          &lt;input id=&quot;focusInput&quot; type=&quot;number&quot; min=&quot;1&quot; max=&quot;120&quot; value=&quot;52&quot; style=&quot;width:60px; padding:4px; border-radius:4px&quot; /&gt;
+          &lt;input id=&quot;focusInput&quot; type=&quot;number&quot; min=&quot;1&quot; max=&quot;60&quot; value=&quot;30&quot; style=&quot;width:60px; padding:4px; border-radius:4px&quot; /&gt;
         &lt;/div&gt;
       &lt;/section&gt;
 
@@ -310,16 +338,15 @@ body{
         &lt;section class=&quot;panel box&quot;&gt;
           &lt;h3&gt;🧠 Break ideas&lt;/h3&gt;
           &lt;div class=&quot;task-suggest&quot;&gt;
-          &lt;span id=&quot;taskText&quot;&gt;&lt;strong&gt;Light mobility&lt;/strong&gt; — neck rolls, shoulder circles, slow walk&lt;/span&gt;
+            &lt;span id=&quot;taskText&quot;&gt;&lt;strong&gt;Jumping jacks&lt;/strong&gt; — get the blood flowing!&lt;/span&gt;
             &lt;div style=&quot;display:flex; gap:8px; align-items:center&quot;&gt;
               &lt;button class=&quot;ghost&quot; id=&quot;shuffleBtn&quot; title=&quot;New suggestion (S)&quot;&gt;Shuffle 🔀&lt;/button&gt;
             &lt;/div&gt;
           &lt;/div&gt;
           &lt;div class=&quot;list&quot; style=&quot;margin-top:10px&quot;&gt;
-            &lt;!-- Updated break suggestions to emphasize movement for 52/17 Pomodoro --&gt;
-            &lt;div class=&quot;pill&quot;&gt;🧘 Light mobility &lt;span class=&quot;small&quot;&gt;neck rolls, shoulder circles, slow walk&lt;/span&gt;&lt;/div&gt;
-            &lt;div class=&quot;pill&quot;&gt;🏃 Brisk walk or jumping jacks &lt;span class=&quot;small&quot;&gt;5–7&nbsp;min moderate movement&lt;/span&gt;&lt;/div&gt;
-            &lt;div class=&quot;pill&quot;&gt;🧎 Yoga flow &lt;span class=&quot;small&quot;&gt;cat‑cow, forward fold, twist&lt;/span&gt;&lt;/div&gt;
+            &lt;div class=&quot;pill&quot;&gt;🦵 Do a random ab exercise &lt;span class=&quot;small&quot;&gt;planks, bicycle crunches, leg raises…&lt;/span&gt;&lt;/div&gt;
+            &lt;div class=&quot;pill&quot;&gt;🟢 Duolingo lesson &lt;span class=&quot;small&quot;&gt;keep the streak alive&lt;/span&gt;&lt;/div&gt;
+            &lt;div class=&quot;pill&quot;&gt;🈺 Learn Japanese &lt;span class=&quot;small&quot;&gt;kana review, vocab, 1 grammar point&lt;/span&gt;&lt;/div&gt;
           &lt;/div&gt;
         &lt;/section&gt;
 
@@ -336,24 +363,23 @@ body{
     &lt;/div&gt;
 
     &lt;footer&gt;
-      &lt;div&gt;Designed for you • Cycles: 4 • Focus 52:00 • Short break 17:00 • Final break 30:00&lt;/div&gt;
+      &lt;div&gt;Designed for you • Cycles: 4 • Focus 30:00 • Short break 5:00 • Final break 30:00&lt;/div&gt;
       &lt;div&gt;Made with ❤️ — works offline&lt;/div&gt;
     &lt;/footer&gt;
   &lt;/div&gt;
 
   &lt;script&gt;
     // --- Configuration per your request ---
-    // Default durations updated to 52/17 Pomodoro with a 30-minute long break
-    let FOCUS_MIN = 52;        // 52-minute focus sessions (now editable)
-    const SHORT_BREAK_MIN = 17;   // 17-minute short breaks after cycles 1–3
+    let FOCUS_MIN = 30;        // 30-minute focus sessions (now editable)
+    const SHORT_BREAK_MIN = 5;   // 5-minute short breaks after cycles 1–3
     const LONG_BREAK_MIN = 30;   // 30-minute long break after cycle 4
     const TOTAL_CYCLES = 4;
 
     const tasks = [
-      &quot;Light mobility — neck rolls, shoulder circles, slow walk&quot;,
-      &quot;Moderate movement — brisk walk, stairs, 20–30 jumping jacks&quot;,
-      &quot;Yoga flow — cat‑cow, forward fold, gentle twist&quot;,
-      &quot;Bodyweight moves — 10–12 squats, toe touches, stretch&quot;
+      &quot;Jumping jacks — get the blood flowing!&quot;,
+      &quot;Do a random ab exercise — planks, bicycle crunches, leg raises…&quot;,
+      &quot;Do a Duolingo lesson — keep the streak alive&quot;,
+      &quot;Learn Japanese — review kana, vocab, or 1 grammar point&quot;
     ];
 
     // === Enhancements: sound/notification alerts and auto‑start ===
@@ -382,8 +408,6 @@ body{
 
     // --- State ---
     let cycle = 1;
-    // Track how many focus sessions have been completed
-    let cyclesCompleted = 0;
     let mode = &quot;focus&quot;; // &#x27;focus&#x27; | &#x27;short&#x27; | &#x27;long&#x27;
     let secondsLeft = FOCUS_MIN * 60;
     let running = false;
@@ -396,7 +420,6 @@ body{
     const modeLabel = document.getElementById(&#x27;modeLabel&#x27;);
     const modeHint = document.getElementById(&#x27;modeHint&#x27;);
     const cycleNo = document.getElementById(&#x27;cycleNo&#x27;);
-    const cyclesCompletedEl = document.getElementById(&#x27;cyclesCompleted&#x27;);
     const startPauseBtn = document.getElementById(&#x27;startPauseBtn&#x27;);
     const resetBtn = document.getElementById(&#x27;resetBtn&#x27;);
     const skipBtn = document.getElementById(&#x27;skipBtn&#x27;);
@@ -407,7 +430,7 @@ body{
     const focusInput = document.getElementById(&#x27;focusInput&#x27;);
     focusInput.addEventListener(&#x27;input&#x27;, function(){
       const val = parseInt(this.value, 10);
-      if (!isNaN(val) && val >= 1 && val <= 120) {
+      if (!isNaN(val) && val >= 1 && val <= 60) {
         FOCUS_MIN = val;
         // When in focus mode, reset the remaining seconds and startedAt
         if(mode === &#x27;focus&#x27;){
@@ -457,8 +480,6 @@ body{
     }
     function nextStage(){
       if(mode===&#x27;focus&#x27;){
-        // Completed a focus session; increment completed count
-        cyclesCompleted++;
         if(cycle &lt; TOTAL_CYCLES){
           setMode(&#x27;short&#x27;);
         }else{
@@ -485,7 +506,6 @@ body{
       for(let i=1;i&lt;=TOTAL_CYCLES;i++){
         dots[i].classList.toggle(&#x27;on&#x27;, i&lt;=cycle);
       }
-      cyclesCompletedEl.textContent = cyclesCompleted;
     }
     function updateRender(){
       const total = totalForMode(mode);
@@ -536,7 +556,6 @@ body{
     function resetAll(){
       pause();
       cycle = 1;
-      cyclesCompleted = 0;
       updateCycleUI();
       setMode(&#x27;focus&#x27;);
       updateRender();
@@ -1075,10 +1094,10 @@ body{
           "6–7 PM: 🟦 Labs/Simulations",
           "7–8:30 PM: 🟦 Labs/Simulations",
           "8:30–9 PM: 🟨 Emails (7:30–8) → 🌙 Night Routine",
-          // Add extended essay writing session late at night
+          // Replace late-night sleep with extended essay writing session
           "9 PM–2 AM: 🟦 Essay writing",
         ],
-        // Tuesday schedule updated to take over the previous Thursday plan
+        // Tuesday schedule updated to take over previous Thursday tasks
         Tuesday: [
           "6 AM: 🟨 Wake, shower, breakfast",
           "7–9 AM: 🟧 Chill Skills",
@@ -1103,7 +1122,7 @@ body{
           "8:30–9 PM: 🌙 Night Routine",
           "9–11 PM: 🌙 Sleep",
         ],
-        // Thursday schedule updated to take over the previous Tuesday plan
+        // Thursday schedule updated to take over previous Tuesday tasks
         Thursday: [
           "6 AM: 🟨 Wake, shower, breakfast",
           "7–9 AM: 🟦 Polish Essays (Pomodoro)",
