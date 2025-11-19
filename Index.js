@@ -237,6 +237,9 @@
   const WORKOUT_KEY="planner_v3_workout"; const ROADMAP_KEY="planner_v3_roadmap"; const SKILL_KEY="planner_v3_skills"; const COACH_KEY="planner_v3_coach";
   const HABIT_HISTORY_KEY="planner_v3_habit_history"; const HABIT_HISTORY_RETENTION_DAYS=180;
   const CAL_KEY="planner-calendar-events";
+  const startOfWeek = (date)=>{ const d = new Date(date); d.setDate(d.getDate() - d.getDay()); d.setHours(0,0,0,0); return d; };
+  const normalizeTitle = (t)=> typeof t === "string" ? t : (t && t.textContent ? t.textContent : String(t||""));
+  let currentWeek = startOfWeek(new Date());
   let plannerViewMode = "week";
   let classTermFilter = "all";
   let classCourses = [];
@@ -556,6 +559,21 @@
   let skillProgressState = loadSkillProgress();
   let coachState = loadCoachState();
   let habitHistory = loadHabitHistory();
+  let studyNagTimer = null;
+  let workloadExtras = [];
+
+  function isWorkloadEntry(text=""){
+    return /^\s*\[(P|D|Q|L)\]/i.test(text || "");
+  }
+
+  function extractDue(line){
+    const m = /due\s+([0-9/\\-]+(?:\\s+\\d{1,2}:\\d{2}\\s*(?:AM|PM))?)/i.exec(line || "");
+    if(m){
+      const d = new Date(m[1]);
+      if(!isNaN(d)) return d;
+    }
+    return null;
+  }
   let rpgState = loadRPG();
   let moodEnergyState = loadMoodEnergy();
   try{
@@ -648,6 +666,10 @@
   const assignmentsBtn = document.getElementById("btn-assignments");
   const weekViewToggle = document.getElementById("planner-week-view");
   const classViewToggle = document.getElementById("planner-class-view");
+  const workloadCard = document.getElementById("workload-card");
+  const workloadList = document.getElementById("workload-list");
+  const workloadBtn = document.getElementById("btn-workload");
+  const workloadClose = document.getElementById("workload-close");
   const rpgHud = document.getElementById("rpg-hud");
   const moodSelect = document.getElementById("mood-select");
   const energySelect = document.getElementById("energy-select");
@@ -865,7 +887,93 @@
     );
   }
 
+  function startStudyNag(){
+    if(studyNagTimer || !("Notification" in window)) return;
+    const baseLines = [
+      "Are you studying or should I file an official complaint?",
+      "Study check: are you working or do I need to start humming elevator music?",
+      "Quick poke: back to the books or should I get upset?",
+      "Friendly reminder: the notes won't read themselves.",
+      "Status: waiting for you to study. Please don't make me pout."
+    ];
+    const send = ()=>{
+      let msg = "";
+      const missions = getUpcomingAssignments(3);
+      if(missions && missions.length){
+        const target = missions.find(m=>m.daysLeft<=2) || missions[0];
+        if(target){
+          const cleanTitle = target.title.replace(/\[.*?\]\s*/,"").trim() || target.title;
+          let when = "soon";
+          if(target.daysLeft===0) when = "today";
+          else if(target.daysLeft===1) when = "tomorrow";
+          else if(target.daysLeft<0) when = `${Math.abs(target.daysLeft)} day${Math.abs(target.daysLeft)===1?"":"s"} late`;
+          else when = `in ${target.daysLeft} day${target.daysLeft===1?"":"s"}`;
+          msg = `Hey, your ${cleanTitle} boss fight is ${when}. Gear up!`;
+        }
+      }
+      if(!msg){
+        msg = baseLines[Math.floor(Math.random()*baseLines.length)];
+      }
+      try{
+        new Notification("Study check", { body: msg });
+      }catch(e){}
+    };
+    const ensurePermission = ()=>{
+      if(Notification.permission === "granted") return true;
+      if(Notification.permission === "denied") return false;
+      Notification.requestPermission();
+      return false;
+    };
+    if(!ensurePermission()) return;
+    studyNagTimer = setInterval(()=>{
+      if(Notification.permission !== "granted") return;
+      send();
+    }, 60*60*1000); // hourly
+    // start first ping after 1 minute to keep it gentle
+    setTimeout(()=>{ if(Notification.permission==="granted") send(); }, 60*1000);
+  }
+
+  function renderWorkload(){
+    if(!workloadCard || !workloadList) return;
+    const items = getUpcomingAssignments(25);
+    const manual = workloadExtras.map(item=>{
+      return {
+        title: normalizeTitle(item.title),
+        due: item.due,
+        daysLeft: item.daysLeft ?? 0,
+        inWindow: true,
+        source:"planner"
+      };
+    });
+    const combined = items.concat(manual);
+    combined.sort((a,b)=>{
+      if(a.due==null) return 1;
+      if(b.due==null) return -1;
+      return a.due - b.due;
+    });
+    workloadList.innerHTML = "";
+    if(!combined.length){
+      workloadList.append(el("div",{class:"workload-empty"},"No deadlines imported for this window."));
+    } else {
+      combined.forEach(item=>{
+        const d = item.due ? new Date(item.due) : null;
+        const date = d ? d.toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"}) : "No date";
+        const meta = `${date} • ${item.daysLeft} day${Math.abs(item.daysLeft)===1?"":"s"} ${item.daysLeft>=0?"left":"late"}`;
+        const row = el("div",{class:"workload-item"},
+          el("div",null,
+            el("div",null,item.title),
+            el("div",{class:"meta"}, meta)
+          )
+        );
+        workloadList.append(row);
+      });
+    }
+    workloadCard.classList.remove("hidden");
+  }
+
   render();
+  workloadBtn?.addEventListener("click",renderWorkload);
+  workloadClose?.addEventListener("click",()=>workloadCard?.classList.add("hidden"));
   weekViewToggle?.addEventListener("click",()=>{
     plannerViewMode = "week";
     updatePlannerViewButtons();
@@ -876,6 +984,9 @@
     updatePlannerViewButtons();
     render();
   });
+  workloadBtn?.addEventListener("click",renderWorkload);
+  workloadClose?.addEventListener("click",()=>workloadCard?.classList.add("hidden"));
+  startStudyNag();
   moodSelect?.addEventListener("change",e=>{
     moodEnergyState.mood = e.target.value;
     saveMoodEnergy(moodEnergyState);
@@ -1231,9 +1342,9 @@
   let secondsLeft = FOCUS_MIN * 60;
   let running = false;
   let timerId = null;
-  let breakChimeTimer = null;
   let startedAt = null;
   let beepCtx = null;
+  let lastBreakChime = null;
 
   const circleEl = document.getElementById("pomo-circle");
   const modeLabel = document.getElementById("pomo-mode");
@@ -1315,16 +1426,9 @@
     dots.forEach((dot, idx)=>{ if(dot) dot.classList.toggle("on", idx < cycle); });
   }
 
-  function stopBreakChime(){
-    if(breakChimeTimer){
-      clearInterval(breakChimeTimer);
-      breakChimeTimer = null;
-    }
-  }
-
   function setMode(newMode){
-    stopBreakChime();
     mode = newMode;
+    lastBreakChime = null;
     secondsLeft = totalFor(mode);
     startedAt = null;
     modeLabel.textContent = mode === "focus" ? "Focus" : (mode === "short" ? "Short break" : "Long break");
@@ -1344,6 +1448,13 @@
     const total = totalFor(mode);
     secondsLeft = Math.max(0, total - elapsed);
     updateRender();
+    if(running && (mode==="short" || mode==="long")){
+      const elapsedBucket = Math.floor((total - secondsLeft) / 30);
+      if(elapsedBucket > 0 && elapsedBucket !== lastBreakChime){
+        playBeep();
+        lastBreakChime = elapsedBucket;
+      }
+    }
     if(secondsLeft <= 0){
       nextStage();
     }
@@ -1385,9 +1496,9 @@
 
   function resetAll(){
     pause();
-    stopBreakChime();
     cycle = 1;
     cyclesCompleted = 0;
+    lastBreakChime = null;
     setMode("focus");
     updateCycleUI();
     addXP(5);
@@ -1487,30 +1598,28 @@
     const dayOffsets = { Sunday:0, Monday:1, Tuesday:2, Wednesday:3, Thursday:4, Friday:5, Saturday:6 };
     if(!rangeEl || !gridEl) return;
 
-    let week = startOfWeek(new Date());
+    let week = currentWeek;
     const pad = n => String(n).padStart(2,"0");
     const days = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
-
-    function startOfWeek(date){
-      const d = new Date(date);
-      d.setDate(d.getDate() - d.getDay());
-      d.setHours(0,0,0,0);
-      return d;
-    }
 
     function parseICS(text){
       function unfold(str){ return str.replace(/\r\n[ \t]/g,"").replace(/\n[ \t]/g,""); }
       function parseDate(val){
-        const s = String(val).trim();
+        let s = String(val||"").trim();
+        // remove timezone prefix if present: DTSTART;TZID=America/...:value
+        s = s.split(";").pop().split("=").pop();
+        s = s.replace(/[^0-9TzZ]/g,"").replace(/T/,"").replace(/Z/,"");
+        // accept formats like 20241123 or 20241123T235900
+        if(s.length < 8) return null;
         const y = parseInt(s.slice(0,4),10);
         const m = parseInt(s.slice(4,6),10) - 1;
         const d = parseInt(s.slice(6,8),10);
         if(s.length <= 8){
           return { date: new Date(y,m,d,0,0,0), allDay: true };
         }
-        const hh = parseInt(s.slice(9,11)||"0",10);
-        const mm = parseInt(s.slice(11,13)||"0",10);
-        const ss = parseInt(s.slice(13,15)||"0",10);
+        const hh = parseInt(s.slice(8,10)||"0",10);
+        const mm = parseInt(s.slice(10,12)||"0",10);
+        const ss = parseInt(s.slice(12,14)||"0",10);
         return { date: new Date(y,m,d,hh,mm,ss), allDay: false };
       }
       const clean = unfold(text);
@@ -1624,6 +1733,7 @@
     }
 
     renderCalendarPanel = function(){
+      week = currentWeek;
       const events = loadEvents();
       if(dateInput){
         dateInput.value = `${week.getFullYear()}-${pad(week.getMonth()+1)}-${pad(week.getDate())}`;
@@ -1699,15 +1809,17 @@ rangeEl.textContent = `${week.toLocaleDateString(undefined,{month:"short",day:"n
         });
         gridEl.append(col);
       }
+      currentWeek = week;
     };
 
-    prevBtn && prevBtn.addEventListener("click", ()=>{ week.setDate(week.getDate()-7); renderCalendarPanel(); });
-    nextBtn && nextBtn.addEventListener("click", ()=>{ week.setDate(week.getDate()+7); renderCalendarPanel(); });
+    prevBtn && prevBtn.addEventListener("click", ()=>{ week.setDate(week.getDate()-7); currentWeek = week; renderCalendarPanel(); });
+    nextBtn && nextBtn.addEventListener("click", ()=>{ week.setDate(week.getDate()+7); currentWeek = week; renderCalendarPanel(); });
     dateInput && dateInput.addEventListener("change", e=>{
       const val = e.target.value;
       if(!val) return;
       const next = new Date(val);
       if(!isNaN(next)) week = startOfWeek(next);
+      currentWeek = week;
       renderCalendarPanel();
     });
     showAllChk && showAllChk.addEventListener("change", renderCalendarPanel);
@@ -1754,9 +1866,9 @@ rangeEl.textContent = `${week.toLocaleDateString(undefined,{month:"short",day:"n
       const endLabel = `${endDate.getFullYear()}-${pad(endDate.getMonth()+1)}-${pad(endDate.getDate())}`;
       const fileName = `planner-${startLabel}-${endLabel}.ics`;
       downloadBlob(content, fileName, "text/calendar;charset=utf-8");
-      const rangeLabel = rangeEl ? rangeEl.textContent : `${startLabel} Ã¢â‚¬â€œ ${endLabel}`;
-      updateICSStatus(`Exported ${count} planner entries for ${rangeLabel}.`, "success");
-    });
+    const rangeLabel = rangeEl ? rangeEl.textContent : `${startLabel} - ${endLabel}`;
+    updateICSStatus(`Exported ${count} planner entries for ${rangeLabel}.`, "success");
+  });
 
     renderCalendarPanel();
       updateICSStatus("Import or export .ics files in this tab.");
@@ -1824,34 +1936,49 @@ rangeEl.textContent = `${week.toLocaleDateString(undefined,{month:"short",day:"n
 
   function getUpcomingAssignments(limit=4){
     let events = loadEvents();
-    if(!events || !events.length){
+    const hasRealEvents = Array.isArray(events) && events.length;
+    if(!hasRealEvents){
       events = fallbackClassEvents;
     }
     const now = Date.now();
+    const rangeStart = startOfWeek(currentWeek || new Date());
+    rangeStart.setHours(0,0,0,0);
+    const rangeEnd = new Date(rangeStart);
+    rangeEnd.setDate(rangeStart.getDate()+13); // current week + next week buffer
     const upcoming = [];
     const seen = new Set();
     events.forEach(ev=>{
       if(!ev || !ev.title || !ev.start) return;
       const due = new Date(ev.start).getTime();
       if(isNaN(due)) return;
+      const inWindow = due >= rangeStart.getTime() && due <= rangeEnd.getTime();
       const daysLeft = Math.ceil((due - now)/86400000);
-      if(daysLeft < -7) return; // skip far past
-      const key = ev.title.toLowerCase();
+      if(daysLeft < -7 && !inWindow) return; // drop very old items unless they sit in view window
+      const title = normalizeTitle(ev.title);
+      const key = `${title.toLowerCase()}-${due}`;
       if(seen.has(key)) return;
       seen.add(key);
       upcoming.push({
-        title: ev.title,
+        title,
         due,
-        description: ev.description || "",
+        description: normalizeTitle(ev.description || ""),
         daysLeft,
+        inWindow
       });
     });
-    upcoming.sort((a,b)=> a.due - b.due);
-    return upcoming.slice(0, limit);
+    const prioritized = upcoming
+      .filter(item=>item.inWindow)
+      .sort((a,b)=> a.due - b.due);
+    const nextAfterWindow = upcoming
+      .filter(item=>!item.inWindow)
+      .sort((a,b)=> a.due - b.due);
+    const combined = prioritized.concat(nextAfterWindow);
+    return combined.slice(0, limit);
   }
 
   function render(){
     panel.innerHTML = "";
+    workloadExtras = [];
     updatePlannerViewButtons();
     renderDangerZone();
     renderRpgHUD();
@@ -1927,26 +2054,45 @@ rangeEl.textContent = `${week.toLocaleDateString(undefined,{month:"short",day:"n
     render();
   }
 
-  function buildDay(day){ const wrap = el("div",{class:"content"}); wrap.append(el("div",{class:"title"},"Activities")); const listWrap = el("div",{class:"planner-day","data-day":day}); listWrap.addEventListener("dragover",e=>{ if(!editMode) return; e.preventDefault(); }); listWrap.addEventListener("drop",e=>handleDropEvent(e, day)); (data[day]||[]).forEach((line,idx)=>{ listWrap.append(row(day, idx, line)); }); const add = el("button",{ class:"addrow", disabled: !editMode, onclick:()=>{ (data[day]=data[day]||[]).push("Ã¢â‚¬Â¢ Add a new itemÃ¢â‚¬Â¦"); saveData(data); render(); } },"➕ Add item"); wrap.append(listWrap, add);     wrap.append(el("div",{style:"margin-top:12px;font-weight:600;color:#6b21a8"},"Today's Mood"));
-    const m = el("div",{class:"mood","aria-label":"Today's mood selector","role":"group"});
-    moodOptions.forEach((option,i)=>{
-      const selected = mood[day]===i;
-      const s = el("span",{ role:"button", tabindex:"0", "aria-pressed": selected ? "true" : "false", "aria-label": `${option.label} mood`, class: selected ? "sel" : "" },option.emoji);
-      s.addEventListener("click",()=>{
-        mood[day]=i;
-        saveMood(mood);
-        render();
-      });
-      s.addEventListener("keydown",e=>{
-        if(e.key==="Enter" || e.key===" "){
-          e.preventDefault();
-          s.click();
-        }
-      });
-      m.append(s);
+  function buildDay(day){
+  const wrap = el("div",{class:"content"});
+  wrap.append(el("div",{class:"title"},"Activities"));
+  const listWrap = el("div",{class:"planner-day","data-day":day});
+  listWrap.addEventListener("dragover",e=>{ if(!editMode) return; e.preventDefault(); });
+  listWrap.addEventListener("drop",e=>handleDropEvent(e, day));
+  (data[day]||[]).forEach((line,idx)=>{
+    if(day==="Sunday" && isWorkloadEntry(line)){
+      const due = extractDue(line);
+      const daysLeft = due ? Math.ceil((due.getTime() - Date.now())/86400000) : 0;
+      workloadExtras.push({ title: line, due: due ? due.getTime() : null, daysLeft, inWindow:true });
+      return;
+    }
+    listWrap.append(row(day, idx, line));
+  });
+  const add = el("button",{ class:"addrow", disabled: !editMode, onclick:()=>{ (data[day]=data[day]||[]).push("• Add a new item…"); saveData(data); render(); } },"➕ Add item");
+  wrap.append(listWrap, add);
+  wrap.append(el("div",{style:"margin-top:12px;font-weight:600;color:#6b21a8"},"Today's Mood"));
+  const m = el("div",{class:"mood","aria-label":"Today's mood selector","role":"group"});
+  moodOptions.forEach((option,i)=>{
+    const selected = mood[day]===i;
+    const s = el("span",{ role:"button", tabindex:"0", "aria-pressed": selected ? "true" : "false", "aria-label": `${option.label} mood`, class: selected ? "sel" : "" },option.emoji);
+    s.addEventListener("click",()=>{
+      mood[day]=i;
+      saveMood(mood);
+      render();
     });
-    wrap.append(m);
- return wrap; }
+    s.addEventListener("keydown",e=>{
+      if(e.key==="Enter" || e.key===" " ){
+        e.preventDefault();
+        s.click();
+      }
+    });
+    m.append(s);
+  });
+  wrap.append(m);
+  return wrap;
+}
+
 
   function buildJournalCard(){
     const card = el("div",{class:"journal-card"});
@@ -2080,25 +2226,8 @@ rangeEl.textContent = `${week.toLocaleDateString(undefined,{month:"short",day:"n
     });
   }
 
-  // Tiny helper to create elements with optional children (strings or nodes)
-  function el(tag, attrs, ...children){
-    const n = document.createElement(tag);
-    if(attrs){
-      for(const k in attrs){
-        if(k==="class") n.className = attrs[k];
-        else if(k==="value") n.value = attrs[k];
-        else if(k==="disabled"){ if(attrs[k]) n.setAttribute("disabled",""); }
-        else if(k==="onclick") n.addEventListener("click", attrs[k]);
-        else n.setAttribute(k, attrs[k]);
-      }
-    }
-    children.flat().forEach(ch=>{
-      if(ch==null) return;
-      if(typeof ch === "string" || typeof ch === "number") n.append(document.createTextNode(ch));
-      else n.append(ch);
-    });
-    return n;
-  }
+  function el(tag, attrs, text){ const n = document.createElement(tag); if(attrs) for(const k in attrs){ if(k==="class") n.className = attrs[k]; else if(k==="value") n.value = attrs[k]; else if(k==="disabled") { if(attrs[k]) n.setAttribute("disabled",""); } else if(k==="onclick") n.addEventListener("click", attrs[k]); else n.setAttribute(k, attrs[k]); } if(text!=null) n.textContent = text; return n; }
+
   function safeParse(raw){ try{ return raw ? JSON.parse(raw) : null; }catch(e){ return null; } }
   function splitCSVLine(line){
     const result = [];
@@ -2385,25 +2514,6 @@ const workoutController = initWorkoutTab();
     };
     reader.readAsText(file);
   });
- // Values that count as "true" / checked
-const TRUE_VALUES = ["1","true","yes","y","x","v","✓","check","done"];
-
-habitsState = dataRows.map(line => {
-  const cells = splitCSVLine(line).map(cell =>
-    cell.replace(/^"|"$/g,"").trim()
-  );
-
-  const [name = "New habit", catLabel = "", ...dayCells] = cells;
-  const cat = habitCatFromLabel(catLabel).id;
-
-  const days = dayOrder.map((_, idx) => {
-    const val = (dayCells[idx] || "").trim().toLowerCase();
-    return TRUE_VALUES.includes(val);
-  });
-
-  return normalizeHabit({ name, cat, days });
-});
-
   updatePersistStatus();
 
   function initChatbot(){
@@ -2445,10 +2555,40 @@ habitsState = dataRows.map(line => {
     }
     function buildReply(message){
       const lower = message.toLowerCase();
+      const formatDue = (item)=>{
+        const d = new Date(item.due);
+        const dateLabel = d.toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"});
+        const delta = item.daysLeft;
+        const suffix = delta >= 0 ? `${delta} day${delta===1?"":"s"} left` : `${Math.abs(delta)} day${Math.abs(delta)===1?"":"s"} late`;
+        return `${item.title} — ${dateLabel} (${suffix})`;
+      };
+      const upcoming = getUpcomingAssignments(3);
+
+      if(["deadline","due","assignment","danger","class","calendar"].some(k=>lower.includes(k))){
+        if(!upcoming.length) return "I don't see any imported deadlines in this window. Try importing your .ics and pick the right week.";
+        return `Your next deadlines: ${upcoming.map(formatDue).join(" • ")}. Start the earliest one with a 10-minute warmup task.`;
+      }
+      if(["pomodoro","timer","break"].some(k=>lower.includes(k))){
+        return "Run a focus block, then during breaks do a posture reset + water. Keep breaks short; your timer now chimes every 30s on breaks to keep you honest.";
+      }
+      if(["habit","streak","consistency","routine"].some(k=>lower.includes(k))){
+        const pct = Math.round(calcHabitProgress());
+        return `Your week is ${pct}% complete. Pick one habit you can mark done in the next 5 minutes, then batch the rest after your next focus block.`;
+      }
+      if(["workout","training","lifting","exercise"].some(k=>lower.includes(k))){
+        const energy = moodEnergyState.energy || "medium";
+        return energy==="low"
+          ? "Energy's low: do a 10-minute mobility/reset and one 'win' set (e.g., pushups or hangs). Save heavy work for tomorrow."
+          : "Stack skills first, then strength. Stop 1 rep before failure so you can train again tomorrow.";
+      }
+      if(["mood","energy","tired","sleep"].some(k=>lower.includes(k))){
+        return "Micro-fix: water + 90s box-breathing + 5-minute tidy/errand. If still foggy, take a brisk 5-minute walk before the next task.";
+      }
+
       const rule = replies.find(entry => entry.keywords.some(key=>lower.includes(key)));
       if(rule) return rule.response;
       if(["hi","hello","hey"].some(greet=>lower.includes(greet))) return "Hey there! What's one win you can chase today?";
-      return `Noted on "${message}". Breathe, hydrate, and keep logging the reps so future-you can see the arc.`;
+      return generateDailySuggestion(true);
     }
     suggestBtn.addEventListener("click",()=>{
       appendMessage("bot", generateDailySuggestion(true));
@@ -2538,6 +2678,8 @@ habitsState = dataRows.map(line => {
     showToast("Reset complete");
   });
 })();
+
+
 
 
 
