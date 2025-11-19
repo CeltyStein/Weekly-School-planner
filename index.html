@@ -5,13 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" type="image/svg+xml" href="planner-icon.svg">
 <title>Planner — Failsafe v3 (Save + Edit Mode + Custom Images)</title>
-<link rel="stylesheet" href="Index.css">
+<link rel="stylesheet" href="week_planner_failsafe_v3.css">
 
 </head>
 <body>
 <div class="wrap">
-  <img id="g" class="decor" src="g.png" alt="Decorative sunglasses">
-  <img id="p" class="decor" src="p.png" alt="Decorative phone icon">
+<img id="p.png" class="decor" src="p.png" alt="Decorative phone icon"/> 
+<img id="g.png" class="decor" src="g.png" alt="Decorative sunglasses"/> 
+
+
+
+
   <header>
     <h1>Your Productivity Hub</h1>
     <p>Planner • Pomodoro • Habits • Assignments • Notes</p>
@@ -44,6 +48,7 @@
       <button class="btn" id="focus-today">🔎 Focus Today</button>
       <button class="btn" id="toggle-days" aria-pressed="false">📉 Collapse all</button>
       <button class="btn" id="btn-assignments">🗂 Add weekly deadlines</button>
+      <button class="btn" id="btn-workload">📚 What my Workload is</button>
       <div class="view-toggle">
         <button class="btn tab" id="planner-week-view" aria-pressed="true">Week view</button>
         <button class="btn tab" id="planner-class-view" aria-pressed="false">Class view</button>
@@ -67,6 +72,14 @@
       </div>
     </div>
     <div id="danger-zone" class="danger-zone"></div>
+    <div id="workload-card" class="card workload-card hidden" aria-live="polite">
+      <div class="workload-head">
+        <h3>📚 What my Workload is</h3>
+        <p class="note">Pulled from your imported calendar and shown for the current + next week.</p>
+        <button class="btn ghost" id="workload-close" type="button">Close</button>
+      </div>
+      <div id="workload-list" class="workload-list"></div>
+    </div>
   </header>
 
   <main class="section">
@@ -598,11 +611,10 @@
 <div id="confetti-wrapper" aria-hidden="true"></div>
 <div id="toast" class="toast" role="status" aria-live="polite">Saved</div>
 
-<script src="Index.js"></script>
+<script src="week_planner_failsafe_v3.js"></script>
 
 </body>
 </html>
-
 
 
 
