@@ -67,11 +67,48 @@
 
 
   
-  .decor{position:fixed;z-index:3;pointer-events:none;animation:float 6s ease-in-out infinite;opacity:.95;filter: drop-shadow(0 2px 4px rgba(0,0,0,.15));}
-  #PGlasses{top:.5rem;left:1rem;width:120px;height:auto}
-  #Phone{top:.5rem;right:1rem;width:88px;height:auto;transform:rotate(-6deg)}
+  /* MAIN CONTENT ABOVE DECOR */
+.wrap{
+  max-width:1100px;
+  margin:0 auto;
+  padding:24px;
+  position: relative;
+  z-index: 1;        /* keeps content above the watermark */
+}
+
+/* WATERMARK DECOR */
+.decor{
+  position: fixed;
+  top: 1.5rem;
+  z-index: 0;        /* behind header/buttons */
+  pointer-events: none;
+  opacity: 0.15;     /* faint watermark feel */
+  animation: float 8s ease-in-out infinite;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,.15));
+}
+
+/* LEFT: GLASSES */
+#PGlasses{
+  left: 1rem;
+  width: 120px;
+  height: auto;
+}
+
+/* RIGHT: PHONE */
+#Phone{
+  right: 1rem;
+  width: 88px;
+  height: auto;
+  transform: rotate(-6deg);
+}
+
+/* HIDE DECOR ON MOBILE */
+@media (max-width: 700px){
+  .decor{
+    display: none;
+  }
+}
   @keyframes float{0%{transform:translateY(0)}50%{transform:translateY(-10px)}100%{transform:translateY(0)}}
-  .hidden{display:none!important}
   .note{font-size:12px;color:#475569}
   .toast{position:fixed;top:12px;left:50%;transform:translateX(-50%);background:#10b981;color:white;padding:10px 14px;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,.15);z-index:50;opacity:0;transition:opacity .2s ease}
   .toast.show{opacity:1}
@@ -327,6 +364,7 @@
     .day-toggle{display:inline-block;}
     .workout-controls{flex-direction:column;align-items:flex-start;}
   }
+
 
 
 
