@@ -5,9 +5,9 @@
   html,body{height:100%}
  body {
   margin: 0;
-  font-family: "system-ui", "-apple-system", "BlinkMacSystemFont",
+  font-family: system-ui, "-apple-system", BlinkMacSystemFont,
                "Segoe UI", "Noto Sans", "Helvetica Neue",
-               "Arial", "sans-serif";
+               Arial, sans-serif;
 
   .color:var(--ink); background: linear-gradient(180deg,var(--bg1),var(--bg2)); }
   .wrap{max-width:1100px;margin:0 auto;padding:24px}
@@ -78,7 +78,7 @@
 
 /* WATERMARK DECOR */
 .decor{
-  position: fixed;
+  position: relative;
   top: 1.5rem;
   z-index: 0;        /* behind header/buttons */
   pointer-events: none;
@@ -94,20 +94,6 @@
   height: auto;
 }
 
-/* RIGHT: PHONE */
-#Phone{
-  right: 1rem;
-  width: 88px;
-  height: auto;
-  transform: rotate(-6deg);
-}
-
-/* HIDE DECOR ON MOBILE */
-@media (max-width: 700px){
-  .decor{
-    display: none;
-  }
-}
   @keyframes float{0%{transform:translateY(0)}50%{transform:translateY(-10px)}100%{transform:translateY(0)}}
   .note{font-size:12px;color:#475569}
   .toast{position:fixed;top:12px;left:50%;transform:translateX(-50%);background:#10b981;color:white;padding:10px 14px;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,.15);z-index:50;opacity:0;transition:opacity .2s ease}
@@ -364,6 +350,7 @@
     .day-toggle{display:inline-block;}
     .workout-controls{flex-direction:column;align-items:flex-start;}
   }
+
 
 
 
